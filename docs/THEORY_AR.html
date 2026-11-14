@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>شرح الأسئلة النظرية الخمسة — Technology Version</title>
+<style>
+@page { size: A4; margin: 14mm 16mm 13mm; }
+* { box-sizing: border-box; }
+body { margin: 0; color: #172b3c; font-family: 'Noto Naskh Arabic', 'Segoe UI', serif; font-size: 12.5pt; line-height: 1.48; text-align: right; }
+.page + .page { break-before: page; }
+header { border-bottom: 2px solid #167b76; padding-bottom: 8px; margin-bottom: 12px; }
+h1 { font-size: 23pt; line-height: 1.4; margin: 0 0 3px; color: #125f60; }
+.subtitle { font: 9pt Arial, sans-serif; color: #516777; text-align: right; }
+.intro { margin: 8px 0 12px; color: #516777; font-size: 11.5pt; }
+section { margin: 0 0 10px; break-inside: avoid; }
+h2 { direction: ltr; text-align: right; font: bold 11pt/1.45 Arial, sans-serif; color: #125f60; margin: 0 0 7px; padding: 6px 9px; background: #edf5f4; border-right: 3px solid #167b76; }
+p { margin: 5px 0; }
+bdi, .en { font-family: Arial, sans-serif; font-size: .86em; direction: ltr; unicode-bidi: isolate; }
+.formula { direction: ltr; unicode-bidi: isolate; text-align: left; font: 10pt/1.6 'DejaVu Sans', sans-serif; background: #f3f6f8; border: 1px solid #dce5e9; border-radius: 5px; padding: 5px 10px; margin: 6px 0; }
+.note { padding: 6px 10px; background: #f3f8f7; border-right: 3px solid #6dada3; margin-top: 7px; font-size: 11.5pt; }
+.number { color: #167b76; font-weight: bold; }
+footer { border-top: 1px solid #d9e3e7; padding-top: 6px; margin-top: 12px; color: #61747f; font-size: 9pt; display: flex; justify-content: space-between; }
+.small { font-size: 11.5pt; }
+</style>
+</head>
+<body>
+<main>
+<div class="page">
+<header>
+<h1>شرح الأسئلة النظرية الخمسة</h1>
+<div class="subtitle" dir="ltr">Information Storage and Retrieval · Technology Version</div>
+</header>
+<p class="intro">دليل مختصر للمناقشة: شرح بالعربي، مع بقاء المصطلحات والمعادلات بالإنجليزي. الأمثلة من الداتا الأصلية: <bdi>10 documents</bdi>.</p>
+<section>
+<h2>1. How do positions support phrase queries?</h2>
+<p>الـ <bdi>term-only index</bdi> يثبت إن الكلمات موجودة في الملف، لكن ما يثبتش ترتيبها أو إنها جنب بعض. عشان نطابق <bdi>phrase</bdi>، بنستخدم الـ <bdi>Positional Index</bdi> ونتأكد إن الكلمات في نفس الـ <bdi>document</bdi>، بنفس الترتيب، وفي <bdi>consecutive positions</bdi>. العد بيبدأ من <bdi>1</bdi>.</p>
+<p>في <bdi>d5</bdi>، كلمة <bdi>machine</bdi> عند <bdi>[1, 3, 9]</bdi>، وكلمة <bdi>learning</bdi> عند <bdi>[2, 10]</bdi>. إذن <bdi>machine learning</bdi> بتبدأ عند <bdi>[1, 9]</bdi>، والـ <bdi>ranges</bdi> هي <bdi>1–2</bdi> و<bdi>9–10</bdi>. عند <bdi>3</bdi> الكلمة اللي بعدها <bdi>models</bdi>، فمفيش تطابق.</p>
+<div class="note"><strong>الفكرة الأساسية:</strong> بنفحص الـ <bdi>positions</bdi> في الـ <bdi>index</bdi>، مش مجرد وجود الكلمات أو البحث بـ <bdi>substring</bdi> في النص.</div>
+</section>
+<section>
+<h2>2. How are DF and IDF related, and why does repetition affect TF?</h2>
+<p><bdi>TF</bdi> هو عدد مرات ظهور الكلمة داخل <bdi>document</bdi> واحد. أما <bdi>DF</bdi> فهو عدد الـ <bdi>distinct documents</bdi> اللي فيها الكلمة؛ تكرارها في نفس الملف ما يزودش مساهمة الملف في <bdi>DF</bdi> عن واحد.</p>
+<div class="formula">IDF(t) = log10(N / DF(t)), &nbsp; N = 10<br>Weighted TF = 1 + log10(TF) if TF &gt; 0; otherwise 0</div>
+<p>كل ما <bdi>DF</bdi> يزيد، <bdi>IDF</bdi> يقل؛ لأن الكلمة المنتشرة أقل قدرة على تمييز ملف. كلمة <bdi>data</bdi> موجودة في <bdi>7 documents</bdi>، فـ <bdi>IDF ≈ 0.1549</bdi>. كلمة <bdi>science</bdi> في <bdi>3 documents</bdi>، فـ <bdi>IDF ≈ 0.5229</bdi>.</p>
+<p>كلمة <bdi>machine</bdi> متكررة <bdi>3</bdi> مرات في <bdi>d5</bdi>، إذن <bdi>TF = 3</bdi> و<bdi>Weighted TF ≈ 1.4771</bdi>، لكن <bdi>d5</bdi> يضيف واحد بس لـ <bdi>DF</bdi>. الـ <bdi>logarithm</bdi> يخلي التكرار مفيد من غير مبالغة في وزنه.</p>
+</section>
+<section>
+<h2>3. Why use TF-IDF and vector normalization?</h2>
+<p><bdi>TF-IDF</bdi> بيجمع أهمية الكلمة داخل الملف مع ندرتها في الـ <bdi>collection</bdi>. أما <bdi>Normalization</bdi> فبيقسم كل وزن على <bdi>L2 norm</bdi> للـ <bdi>vector</bdi>، عشان المقارنة تبقى حسب الاتجاه، مش مقدار الأوزان بس.</p>
+<div class="formula">TF-IDF(t,d) = Weighted TF(t,d) × IDF(t)<br>Length(d) = √(Σₜ TF-IDF(t,d)²)<br>Normalized TF-IDF(t,d) = TF-IDF(t,d) / Length(d)</div>
+<p>بكده الملف الأطول ما ياخدش <bdi>score</bdi> أعلى لمجرد إن عنده كلمات أكتر. مجموع مربعات أوزان أي <bdi>nonzero normalized vector</bdi> يساوي <bdi>1</bdi>. لو الـ <bdi>length = 0</bdi>، بنسيب الأوزان صفر لتجنب القسمة على صفر.</p>
+</section>
+<footer><span>الخمس نقط النظرية المطلوبة · شرح للمناقشة</span><span dir="ltr">١ / ٢</span></footer>
+</div>
+<div class="page">
+<header>
+<h1>من الـ Similarity للـ Boolean Queries</h1>
+<div class="subtitle" dir="ltr">Technology Version · Worked examples</div>
+</header>
+<section>
+<h2>4. How do similarity scores rank documents?</h2>
+<p>الأول بنحدد الملفات اللي حققت الـ <bdi>phrase</bdi> أو الـ <bdi>Boolean condition</bdi>. بعد كده بنحسب <bdi>Cosine Similarity</bdi> بين الـ <bdi>query vector</bdi> وكل <bdi>document vector</bdi>. لما الاتنين يكونوا <bdi>L2-normalized</bdi>، الـ <bdi>Cosine Similarity</bdi> تساوي الـ <bdi>dot product</bdi>:</p>
+<div class="formula">Similarity(q,d) = Σₜ NormalizedQuery(t) × NormalizedDocument(t,d)</div>
+<p>بنضرب الأوزان المقابلة لنفس الكلمة، وبنجمع النواتج. بنرتّب الـ <bdi>matching documents</bdi> من أعلى <bdi>score</bdi> لأقل. ولو حصل تعادل، بنستخدم رقم الـ <bdi>document</bdi> تصاعديًا عشان الترتيب يبقى ثابت.</p>
+<p>مع <bdi>machine learning</bdi>، الملف <bdi>d1</bdi> هو نفس الـ <bdi>query</bdi>، فالاتجاه واحد والـ <bdi>score = 1.0000</bdi>. الملفات المطابقة التانية فيها أوزان لكلمات إضافية، فدرجاتها أقل:</p>
+<div class="formula">d1 (1.0000) &gt; d5 (0.3809) &gt; d10 (0.3072) &gt; d2 (0.2867) &gt; d7 (0.2730)</div>
+<div class="note"><strong>تمييز مهم:</strong> الـ <bdi>phrase matching</bdi> يحدد مين يدخل النتيجة، والـ <bdi>Cosine Similarity</bdi> تحدد ترتيب اللي دخلوا. الـ <bdi>query</bdi> بتستخدم <bdi>collection IDF</bdi>، مش <bdi>IDF</bdi> جديد.</div>
+</section>
+<section>
+<h2>5. How do AND and AND NOT differ here?</h2>
+<p>هنسمي مجموعة الملفات اللي فيها <bdi>machine learning</bdi> باسم <bdi>A</bdi>، واللي فيها <bdi>data science</bdi> باسم <bdi>B</bdi>:</p>
+<div class="formula">A = {d1, d2, d5, d7, d10}<br>B = {d3, d5, d8}</div>
+<p><strong><bdi>AND</bdi>:</strong> لازم الـ <bdi>document</bdi> يحتوي الـ <bdi>phrases</bdi> الاتنين كاملين. بنعمل <bdi>intersection</bdi> للمجموعتين:</p>
+<div class="formula">A ∩ B = {d5}</div>
+<p>في الـ <bdi>ranking</bdi> بنستخدم كلمات الـ <bdi>positive phrases</bdi> الاتنين: <bdi>machine, learning, data, science</bdi>. درجة <bdi>d5 ≈ 0.5113</bdi>.</p>
+<p><strong><bdi>AND NOT</bdi>:</strong> نحتفظ بالملفات اللي فيها أول <bdi>phrase</bdi>، ونستبعد اللي فيها تاني <bdi>phrase</bdi> كاملة. بنعمل <bdi>set difference</bdi>:</p>
+<div class="formula">A − B = {d1, d2, d7, d10}<br>Ranking: d1 &gt; d10 &gt; d2 &gt; d7</div>
+<p>هنا الـ <bdi>scoring</bdi> يستخدم <bdi>machine learning</bdi> بس. الـ <bdi>negative phrase</bdi> فلتر للاستبعاد فقط؛ مش بنمسح كلماتها أو أوزانها من الـ <bdi>original document vector</bdi>.</p>
+<div class="note"><strong>ليه <bdi>d2</bdi> و<bdi>d10</bdi> فضلوا؟</strong> فيهم كلمة <bdi>data</bdi>، لكن مفيهمش الـ <bdi>phrase</bdi> الكاملة <bdi>data science</bdi>؛ عشان كده ما بيتستبعدوش.</div>
+</section>
+<p class="small"><strong>ملاحظة حسابية:</strong> الأرقام هنا مقربة للعرض. البرنامج بيحتفظ بالـ <bdi>full precision</bdi> أثناء الحساب، ويعمل <bdi>rounding</bdi> عند العرض فقط.</p>
+<footer><span>المرجع: الأسئلة الخمسة ونتائج Technology في مواصفات المشروع</span><span dir="ltr">٢ / ٢</span></footer>
+</div>
+</main>
+</body>
+</html>
