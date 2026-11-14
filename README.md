@@ -9,6 +9,8 @@ locally bundled Chart.js; no database, cloud API, or frontend framework.
 
 ## What is included
 
+English discussion aids: [Five theoretical explanations](docs/THEORY_EN.pdf) and [Part C file-location map](docs/SUBMISSION_MAP_EN.pdf).
+
 Arabic discussion aids: [Part C file-location map](docs/SUBMISSION_MAP_AR.pdf) and [five theoretical explanations](docs/THEORY_AR.pdf).
 
 - Exact Technology dataset: 10 documents, 27 unique terms, 64 tokens.
