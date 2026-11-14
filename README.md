@@ -20,8 +20,7 @@ Arabic discussion aids: [Part C file-location map](docs/SUBMISSION_MAP_AR.pdf) a
   and Export & Report. Filters, heatmap, original-document highlighting, charts,
   downloads, keyboard forms, responsive layouts, and reduced-motion support.
 - All generated JSON/CSV results in `outputs/`; actual screenshots in `screenshots/`.
-- [Project report](docs/PROJECT_REPORT.md), [Egyptian Arabic study guide](docs/STUDY_GUIDE_AR.md),
-  [requirements map](docs/REQUIREMENTS.md), and [validation evidence](docs/VALIDATION.md).
+- English and Arabic PDF guides covering the theory and submission file locations.
 - Windows double-click fallback and a reproducible Windows executable build script.
 
 ## Verified toolchain
@@ -192,7 +191,7 @@ tests/reference.py    Independent fixtures transcribed from PDF pages 3–7
 validate.py           11 focused mathematical/API/export validation groups
 tests/browser_smoke.py Optional Playwright integration and screenshot capture
 tests/launcher_smoke.py Readiness, port fallback, duplicate launch, and restart checks
-docs/                 Report, Arabic guide, requirement map, validation record
+docs/                 English and Arabic PDF guides and their HTML sources
 screenshots/          Actual captured application screens
 Dockerfile            Reproducible Linux Spark preprocessing environment
 Launch_IR.bat         Windows double-click fallback

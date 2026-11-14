@@ -962,7 +962,6 @@ async function reports() {
       return card;
     }),
   );
-  $("provenance").textContent = JSON.stringify(model.metadata, null, 2);
 }
 
 $("collapse-sidebar").addEventListener("click", () => {
