@@ -2,7 +2,7 @@
 
 ## Overview and scope
 
-Lumen IR retrieves exact phrases from the assigned ten Technology documents and
+IR Project retrieves exact phrases from the assigned ten Technology documents and
 ranks matching documents using normalized TF-IDF cosine similarity. The seven-page
 university PDF defines Parts A, B, and C. The web GUI, charts, study guide, and
 Windows packaging are additional application features, not replacements for the

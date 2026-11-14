@@ -22,7 +22,7 @@ def main():
     threading.Thread(target=lambda: [lines.put(line) for line in process.stdout], daemon=True).start()
     try:
         line = lines.get(timeout=15)
-        assert 'Lumen IR is ready at http://127.0.0.1:' in line, line
+        assert 'IR Project is ready at http://127.0.0.1:' in line, line
         selected_port = int(line.strip().rsplit(':', 1)[1])
         assert selected_port != preferred, line
         duplicate = subprocess.run(command, cwd=ROOT, input='\n', capture_output=True, text=True, timeout=15)
@@ -34,7 +34,7 @@ def main():
         # A restart proves the OS lock and port record are released after exit.
         restart = subprocess.run(command, cwd=ROOT, input='\n', capture_output=True, text=True, timeout=15)
         assert restart.returncode == 0, restart.stderr
-        assert 'Lumen IR is ready' in restart.stdout, restart.stdout
+        assert 'IR Project is ready' in restart.stdout, restart.stdout
         print('PASS: local Waitress readiness, occupied-port fallback, duplicate launch, Enter shutdown, and restart.')
     finally:
         occupied.close()

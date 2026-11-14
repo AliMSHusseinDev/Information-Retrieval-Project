@@ -1,4 +1,4 @@
-# Lumen IR · Technology Search Engine
+# IR Project · Technology Search Engine
 
 A complete Information Storage and Retrieval project: **real Apache Spark
 indexing**, exact positional phrase matching, Boolean retrieval, full-precision
@@ -8,6 +8,8 @@ locally bundled Chart.js; no database, cloud API, or frontend framework.
 ![Actual application overview](screenshots/overview.png)
 
 ## What is included
+
+Arabic discussion aids: [Part C file-location map](docs/SUBMISSION_MAP_AR.pdf) and [five theoretical explanations](docs/THEORY_AR.pdf).
 
 - Exact Technology dataset: 10 documents, 27 unique terms, 64 tokens.
 - Spark-built positional index and all 27 × 10 required calculation matrices.

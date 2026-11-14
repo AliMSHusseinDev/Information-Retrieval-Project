@@ -62,7 +62,7 @@ def existing_instance(open_browser):
                 raise ValueError('Invalid port')
             url = f'http://127.0.0.1:{port}'
             if ready(url):
-                print('Lumen IR is already running at ' + url)
+                print('IR Project is already running at ' + url)
                 if open_browser:
                     webbrowser.open(url)
                 return
@@ -101,7 +101,7 @@ def main():
             time.sleep(.1)
         else:
             raise RuntimeError('The local server did not become ready.')
-        print('Lumen IR is ready at ' + url, flush=True)
+        print('IR Project is ready at ' + url, flush=True)
         if not args.no_browser:
             webbrowser.open(url)
         if args.headless:
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as error:
-        print(f'Cannot start Lumen IR: {error}', file=sys.stderr)
+        print(f'Cannot start IR Project: {error}', file=sys.stderr)
         if sys.stdin.isatty():
             input('Press Enter to close.\n')
         sys.exit(1)

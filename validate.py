@@ -114,7 +114,7 @@ class TechnologyValidation(unittest.TestCase):
         for route in ['/', '/index', '/analytics', '/search', '/mathematics', '/reports']:
             response = self.client.get(route)
             self.assertEqual(response.status_code, 200)
-            self.assertIn(b'Lumen', response.data)
+            self.assertIn(b'IR Project', response.data)
         self.assertEqual(self.client.get('/api/model').json['model'], self.model)
         self.assertEqual(self.client.get('/api/index?term=machine').json, self.reference_index['machine'])
         for preset, expected in zip(PRESETS, RANKINGS):
