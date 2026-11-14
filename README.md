@@ -11,7 +11,6 @@ locally bundled Chart.js; no database, cloud API, or frontend framework.
 
 English discussion aids: [Five theoretical explanations](docs/THEORY_EN.pdf) and [Part C file-location map](docs/SUBMISSION_MAP_EN.pdf).
 
-Arabic discussion aids: [Part C file-location map](docs/SUBMISSION_MAP_AR.pdf) and [five theoretical explanations](docs/THEORY_AR.pdf).
 
 - Exact Technology dataset: 10 documents, 27 unique terms, 64 tokens.
 - Spark-built positional index and all 27 × 10 required calculation matrices.
@@ -20,7 +19,8 @@ Arabic discussion aids: [Part C file-location map](docs/SUBMISSION_MAP_AR.pdf) a
   and Export & Report. Filters, heatmap, original-document highlighting, charts,
   downloads, keyboard forms, responsive layouts, and reduced-motion support.
 - All generated JSON/CSV results in `outputs/`; actual screenshots in `screenshots/`.
-- English and Arabic PDF guides covering the theory and submission file locations.
+- English PDF guides covering the theory and submission file locations.
+- [Original university specification](<docs/Our Project.pdf>).
 - Windows double-click fallback and a reproducible Windows executable build script.
 
 ## Verified toolchain
@@ -191,7 +191,7 @@ tests/reference.py    Independent fixtures transcribed from PDF pages 3–7
 validate.py           11 focused mathematical/API/export validation groups
 tests/browser_smoke.py Optional Playwright integration and screenshot capture
 tests/launcher_smoke.py Readiness, port fallback, duplicate launch, and restart checks
-docs/                 English and Arabic PDF guides and their HTML sources
+docs/                 Original university specification and English PDF guides
 screenshots/          Actual captured application screens
 Dockerfile            Reproducible Linux Spark preprocessing environment
 Launch_IR.bat         Windows double-click fallback
