@@ -1,0 +1,442 @@
+[
+  {
+    "label": "machine learning",
+    "phrase": "machine learning",
+    "other": "",
+    "mode": "phrase",
+    "query": {
+      "tokens": [
+        "machine",
+        "learning"
+      ],
+      "rows": [
+        {
+          "term": "machine",
+          "tf": 1,
+          "weighted_tf": 1.0,
+          "idf": 0.3010299956639812,
+          "tfidf": 0.3010299956639812,
+          "normalized": 0.7071067811865476
+        },
+        {
+          "term": "learning",
+          "tf": 1,
+          "weighted_tf": 1.0,
+          "idf": 0.3010299956639812,
+          "tfidf": 0.3010299956639812,
+          "normalized": 0.7071067811865476
+        }
+      ],
+      "length": 0.4257207025491162
+    },
+    "first_matches": {
+      "d1": {
+        "starts": [
+          1
+        ],
+        "ranges": [
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "d2": {
+        "starts": [
+          1
+        ],
+        "ranges": [
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "d5": {
+        "starts": [
+          1,
+          9
+        ],
+        "ranges": [
+          [
+            1,
+            2
+          ],
+          [
+            9,
+            10
+          ]
+        ]
+      },
+      "d7": {
+        "starts": [
+          4
+        ],
+        "ranges": [
+          [
+            4,
+            5
+          ]
+        ]
+      },
+      "d10": {
+        "starts": [
+          1,
+          5
+        ],
+        "ranges": [
+          [
+            1,
+            2
+          ],
+          [
+            5,
+            6
+          ]
+        ]
+      }
+    },
+    "second_matches": {},
+    "unknown_terms": [],
+    "results": [
+      {
+        "document": "d1",
+        "text": "machine learning",
+        "first": {
+          "starts": [
+            1
+          ],
+          "ranges": [
+            [
+              1,
+              2
+            ]
+          ]
+        },
+        "second": null,
+        "contributions": [
+          {
+            "term": "machine",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.7071067811865476,
+            "product": 0.5000000000000001
+          },
+          {
+            "term": "learning",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.7071067811865476,
+            "product": 0.5000000000000001
+          }
+        ],
+        "similarity": 1.0000000000000002,
+        "rank": 1
+      },
+      {
+        "document": "d5",
+        "text": "machine learning machine models support data science and machine learning",
+        "first": {
+          "starts": [
+            1,
+            9
+          ],
+          "ranges": [
+            [
+              1,
+              2
+            ],
+            [
+              9,
+              10
+            ]
+          ]
+        },
+        "second": null,
+        "contributions": [
+          {
+            "term": "machine",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.28640148872618,
+            "product": 0.20251643482020443
+          },
+          {
+            "term": "learning",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.2522588625984516,
+            "product": 0.17837395235777068
+          }
+        ],
+        "similarity": 0.3808903871779751,
+        "rank": 2
+      },
+      {
+        "document": "d10",
+        "text": "machine learning models improve machine learning applications research data systems",
+        "first": {
+          "starts": [
+            1,
+            5
+          ],
+          "ranges": [
+            [
+              1,
+              2
+            ],
+            [
+              5,
+              6
+            ]
+          ]
+        },
+        "second": null,
+        "contributions": [
+          {
+            "term": "machine",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.21721138278660582,
+            "product": 0.1535916417193159
+          },
+          {
+            "term": "learning",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.21721138278660582,
+            "product": 0.1535916417193159
+          }
+        ],
+        "similarity": 0.3071832834386318,
+        "rank": 3
+      },
+      {
+        "document": "d2",
+        "text": "machine learning improves data processing",
+        "first": {
+          "starts": [
+            1
+          ],
+          "ranges": [
+            [
+              1,
+              2
+            ]
+          ]
+        },
+        "second": null,
+        "contributions": [
+          {
+            "term": "machine",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.20271344633334848,
+            "product": 0.143340052540006
+          },
+          {
+            "term": "learning",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.20271344633334848,
+            "product": 0.143340052540006
+          }
+        ],
+        "similarity": 0.286680105080012,
+        "rank": 4
+      },
+      {
+        "document": "d7",
+        "text": "artificial intelligence uses machine learning models",
+        "first": {
+          "starts": [
+            4
+          ],
+          "ranges": [
+            [
+              4,
+              5
+            ]
+          ]
+        },
+        "second": null,
+        "contributions": [
+          {
+            "term": "machine",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.19304099928694693,
+            "product": 0.13650059964282768
+          },
+          {
+            "term": "learning",
+            "query_weight": 0.7071067811865476,
+            "document_weight": 0.19304099928694693,
+            "product": 0.13650059964282768
+          }
+        ],
+        "similarity": 0.27300119928565536,
+        "rank": 5
+      }
+    ],
+    "count": 5
+  },
+  {
+    "label": "data science",
+    "phrase": "data science",
+    "other": "",
+    "mode": "phrase",
+    "query": {
+      "tokens": [
+        "data",
+        "science"
+      ],
+      "rows": [
+        {
+          "term": "data",
+          "tf": 1,
+          "weighted_tf": 1.0,
+          "idf": 0.15490195998574316,
+          "tfidf": 0.15490195998574316,
+          "normalized": 0.28404605881210837
+        },
+        {
+          "term": "science",
+          "tf": 1,
+          "weighted_tf": 1.0,
+          "idf": 0.5228787452803376,
+          "tfidf": 0.5228787452803376,
+          "normalized": 0.9588106363997577
+        }
+      ],
+      "length": 0.5453409937583685
+    },
+    "first_matches": {
+      "d3": {
+        "starts": [
+          1
+        ],
+        "ranges": [
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "d5": {
+        "starts": [
+          6
+        ],
+        "ranges": [
+          [
+            6,
+            7
+          ]
+        ]
+      },
+      "d8": {
+        "starts": [
+          1
+        ],
+        "ranges": [
+          [
+            1,
+            2
+          ]
+        ]
+      }
+    },
+    "second_matches": {},
+    "unknown_terms": [],
+    "results": [
+      {
+        "document": "d5",
+        "text": "machine learning machine models support data science and machine learning",
+        "first": {
+          "starts": [
+            6
+          ],
+          "ranges": [
+            [
+              6,
+              7
+            ]
+          ]
+        },
+        "second": null,
+        "contributions": [
+          {
+            "term": "data",
+            "query_weight": 0.28404605881210837,
+            "document_weight": 0.09977144549650824,
+            "product": 0.028339685875270245
+          },
+          {
+            "term": "science",
+            "query_weight": 0.9588106363997577,
+            "document_weight": 0.33678313844977353,
+            "product": 0.32291125530573506
+          }
+        ],
+        "similarity": 0.3512509411810053,
+        "rank": 1
+      },
+      {
+        "document": "d3",
+        "text": "data science tools support analysis",
+        "first": {
+          "starts": [
+            1
+          ],
+          "ranges": [
+            [
+              1,
+              2
+            ]
+          ]
+        },
+        "second": null,
+        "contributions": [
+          {
+            "term": "data",
+            "query_weight": 0.28404605881210837,
+            "document_weight": 0.09280466273843421,
+            "product": 0.026360798690239166
+          },
+          {
+            "term": "science",
+            "query_weight": 0.9588106363997577,
+            "document_weight": 0.3132664403555873,
+            "product": 0.3003631950400274
+          }
+        ],
+        "similarity": 0.32672399373026656,
+        "rank": 2
+      },
+      {
+        "document": "d8",
+        "text": "data science explores data analytics through research computing systems",
+        "first": {
+          "starts": [
+            1
+          ],
+          "ranges": [
+            [
+              1,
+              2
+            ]
+          ]
+        },
+        "second": null,
+        "contributions": [
+          {
+            "term": "data",
+            "query_weight": 0.28404605881210837,
+            "document_weight": 0.0979380881841091,
+            "product": 0.02781892795628891
+          },
+          {
+            "term": "science",
+            "query_weight": 0.9588106363997577,
+            "document_weight": 0.25410217825236964,
+            "product": 0.2436358712407192
+          }
+        ],
+        "similarity": 0.2714547991970081,
+        "rank": 3
+      }
+    ],
+    "count": 3
+  }
+]

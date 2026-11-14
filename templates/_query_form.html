@@ -1,0 +1,58 @@
+<form id="query-form" class="query-form">
+  <div class="query-form-heading">
+    <span class="pill teal">POSITIONAL RETRIEVAL</span
+    ><span class="muted">Exact phrases. Real relevance.</span>
+  </div>
+  <div class="search-mode" role="group" aria-label="Search mode">
+    <button
+      type="button"
+      class="selected"
+      data-mode="phrase"
+      aria-pressed="true"
+    >
+      Phrase search</button
+    ><button type="button" data-mode="and" aria-pressed="false">
+      Boolean AND</button
+    ><button type="button" data-mode="and_not" aria-pressed="false">
+      Boolean AND NOT
+    </button>
+  </div>
+  <div class="search-fields">
+    <div class="field grow">
+      <label for="phrase-input">Search phrase</label>
+      <div class="search-input-wrap">
+        <span aria-hidden="true">⌕</span
+        ><input
+          id="phrase-input"
+          name="phrase"
+          type="text"
+          placeholder="e.g. machine learning"
+          maxlength="300"
+          required
+          autocomplete="off"
+        />
+      </div>
+    </div>
+    <div class="field grow" id="other-field" hidden>
+      <label for="other-input" id="other-label">Required phrase</label
+      ><input
+        id="other-input"
+        name="other"
+        type="text"
+        maxlength="300"
+        placeholder="e.g. data science"
+        autocomplete="off"
+      />
+    </div>
+    <button type="submit" class="button primary" id="search-button">
+      Search collection <span>→</span></button
+    ><button type="button" class="button quiet" id="clear-search">Clear</button>
+  </div>
+  <div class="preset-row">
+    <span class="muted">TRY</span>
+    <div id="query-presets" class="chips"></div>
+  </div>
+  <p class="query-message" id="query-message" role="status">
+    Enter a phrase or choose one of the four assigned queries.
+  </p>
+</form>

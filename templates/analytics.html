@@ -1,0 +1,64 @@
+{% extends 'base.html' %} {% block heading_action %}<a
+  class="button"
+  id="matrix-export"
+  href="/download/raw_tf.csv"
+  >↓ Export CSV</a
+>{% endblock %} {% block content %}
+<div
+  class="tabs"
+  id="matrix-tabs"
+  role="group"
+  aria-label="Calculation type"
+></div>
+<section class="panel analytics-panel">
+  <div class="panel-heading">
+    <div>
+      <h2 id="matrix-title">Raw term frequency</h2>
+      <p id="matrix-subtitle"></p>
+    </div>
+    <span id="matrix-dimensions" class="pill"></span>
+  </div>
+  <div class="toolbar">
+    <div class="field grow">
+      <label for="matrix-search">Term filter</label
+      ><input id="matrix-search" type="search" placeholder="Find a term…" />
+    </div>
+    <div class="field">
+      <label for="document-filter">Document</label
+      ><select id="document-filter">
+        <option value="">All documents</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="precision">Precision</label
+      ><select id="precision">
+        <option value="4">4 decimals</option>
+        <option value="8">8 decimals</option>
+        <option value="full">Full precision</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="density">Density</label
+      ><select id="density">
+        <option value="comfortable">Comfortable</option>
+        <option value="compact">Compact</option>
+      </select>
+    </div>
+    <button class="button quiet" id="clear-filters">Reset</button>
+  </div>
+  <div class="view-toolbar">
+    <div class="segmented" role="group" aria-label="Matrix view">
+      <button class="selected" id="table-mode" aria-pressed="true">Table</button
+      ><button id="heatmap-mode" aria-pressed="false">Heatmap</button>
+    </div>
+    <span class="muted" id="heatmap-key"
+      >Values are computed at full precision.</span
+    >
+  </div>
+  <div class="table-scroll matrix-scroll" id="matrix-container"></div>
+  <details class="formula-note">
+    <summary>Understand this calculation</summary>
+    <p id="matrix-explanation"></p>
+  </details>
+</section>
+{% endblock %}

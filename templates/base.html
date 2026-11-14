@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1220" />
+    <title>{{ title }} · Lumen IR</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="{{ url_for('static', filename='assets/logo.svg') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <script
+      defer
+      src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"
+    ></script>
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/main.js') }}"
+    ></script>
+  </head>
+  <body data-page="{{ page }}">
+    <a class="skip" href="#main">Skip to content</a>
+    <aside class="sidebar" id="sidebar">
+      <a href="/" class="brand"
+        ><img
+          src="{{ url_for('static', filename='assets/logo.svg') }}"
+          alt=""
+          width="38"
+          height="38"
+        /><span
+          >Lumen<span class="brand-ir"> IR</span
+          ><small>INFORMATION RETRIEVAL</small></span
+        ></a
+      >
+      <div class="workspace-label">WORKSPACE</div>
+      <nav aria-label="Main navigation">
+        {% set icons = {'dashboard':'◫', 'index':'≡', 'analytics':'▥', 'search':'⌕', 'mathematics':'ƒ', 'reports':'↓'} %}
+        {% set labels = {'dashboard':'Overview', 'index':'Positional index', 'analytics':'TF-IDF analytics', 'search':'Search engine', 'mathematics':'Query mathematics', 'reports':'Export & report'} %}
+        {% for key in pages %}
+        <a href="{{ '/' if key == 'dashboard' else '/' + key }}"
+           aria-label="{{ labels[key] }}"
+           class="nav-link {{ 'active' if key == page else '' }}"
+           aria-current="{{ 'page' if key == page else 'false' }}">
+          <span class="nav-icon" aria-hidden="true">{{ icons[key] }}</span>
+          <span class="nav-text">{{ labels[key] }}</span>
+          {% if key == 'search' %}<span class="nav-shortcut">↵</span>{% endif %}
+        </a>
+        {% endfor %}
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="collection-icon">T</div>
+        <div class="nav-text">
+          <strong>Technology collection</strong
+          ><small>{{ document_count }} documents · Original dataset</small>
+        </div>
+      </div>
+      <button
+        id="collapse-sidebar"
+        class="collapse"
+        aria-label="Collapse sidebar"
+        aria-expanded="true"
+      >
+        ⇤ <span class="nav-text">Collapse sidebar</span>
+      </button>
+    </aside>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="breadcrumb">
+          Workspace <span>/</span> <strong>{{ title }}</strong>
+        </div>
+        <div class="top-actions">
+          <span class="status"
+            ><i></i> <span id="header-status">Checking collection</span></span
+          ><span class="header-divider"></span
+          ><button
+            id="help-button"
+            class="icon-button"
+            aria-label="About this project"
+          >
+            ?</button
+          ><span class="avatar" title="Technology dataset">T</span>
+        </div>
+      </header>
+      <main id="main">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">
+              TECHNOLOGY COLLECTION <span>/</span> INFORMATION STORAGE &
+              RETRIEVAL
+            </p>
+            <h1>{{ title }}</h1>
+            <p class="page-description">{{ description }}</p>
+          </div>
+          {% block heading_action %}{% endblock %}
+        </div>
+        <div id="app-error" class="notice error" role="alert" hidden></div>
+        {% block content %}{% endblock %}
+        <footer>
+          <span>Lumen IR <span class="muted">/ Technology edition</span></span
+          ><span>Built on Apache Spark · Calculated with precision</span>
+        </footer>
+      </main>
+    </div>
+    <dialog id="help-dialog">
+      <div class="dialog-heading">
+        <h2>From words to relevance</h2>
+        <button id="close-help" class="icon-button" aria-label="Close help">
+          ×
+        </button>
+      </div>
+      <p>
+        This Technology collection uses real PySpark positional indexing,
+        base-10 TF-IDF, and normalized cosine similarity.
+      </p>
+      <p>
+        Phrase search requires consecutive positions. AND intersects phrase
+        sets; AND NOT excludes the complete second phrase. Positions start at 1.
+        Values are rounded only for display.
+      </p>
+      <p>
+        Read the project report and Egyptian Arabic study guide in the
+        repository’s <code>docs/</code> folder.
+      </p>
+      <a class="button primary" href="/mathematics"
+        >Explore the mathematics →</a
+      >
+    </dialog>
+    <div id="toast" role="status" class="toast" hidden></div>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+# Keep dataset bytes stable across Windows/Linux so the saved hash remains valid.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary

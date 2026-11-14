@@ -1,0 +1,58 @@
+{% extends 'base.html' %} {% block heading_action %}<a
+  class="button"
+  href="/download/positional_index.json"
+  >↓ Export index</a
+>{% endblock %} {% block content %}
+<div class="notice">
+  <span class="notice-symbol">i</span
+  ><span
+    >Positions start at <strong>1</strong>. Repeated words retain every
+    occurrence. Select a term, then a document to inspect its original
+    text.</span
+  >
+</div>
+<section class="index-layout">
+  <article class="panel vocabulary">
+    <div class="panel-heading">
+      <h3>Vocabulary <span class="count" id="term-count"></span></h3>
+    </div>
+    <label for="vocabulary-search" class="sr-only">Filter vocabulary</label
+    ><input id="vocabulary-search" type="search" placeholder="Filter terms…" />
+    <div
+      id="vocabulary-list"
+      class="vocabulary-list"
+      role="group"
+      aria-label="Vocabulary terms"
+    ></div>
+  </article>
+  <div>
+    <article class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">SELECTED TERM</p>
+          <h2 id="selected-term">Loading…</h2>
+          <p id="posting-summary"></p>
+        </div>
+        <button class="button" id="copy-positions">Copy positions</button>
+      </div>
+      <div id="postings" class="posting-list"></div>
+    </article>
+    <article class="panel preview-panel">
+      <div class="panel-heading">
+        <h3>Document preview</h3>
+        <span class="pill" id="preview-document">Select a document</span>
+      </div>
+      <p class="document-text" id="document-preview">
+        Choose a document above to see its tokens and positions.
+      </p>
+      <div id="token-strip" class="token-strip"></div>
+    </article>
+  </div>
+</section>
+<details class="panel">
+  <summary>
+    Complete positional index <span class="muted">All terms and postings</span>
+  </summary>
+  <div id="full-index" class="table-scroll"></div>
+</details>
+{% endblock %}
