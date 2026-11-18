@@ -32,10 +32,16 @@ jobs:
           $env:SPARK_HOME = "$runtime/python/Lib/site-packages/pyspark"
           $env:PATH = "$runtime/python;$env:JAVA_HOME/bin;$env:PATH"
           $env:PYSPARK_PYTHON = 'python'
-          & "$runtime/python/python.exe" -m pip install -r requirements.txt
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          & "$runtime/python/python.exe" validate.py
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          function Run-Python([string[]] $arguments) {
+            & "$runtime/python/python.exe" @arguments 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/python-step.log"
+            if ($LASTEXITCODE) {
+              $detail = (Get-Content "$env:RUNNER_TEMP/python-step.log" -Tail 45) -join '%0A'
+              Write-Output "::error::$detail"
+              exit 1
+            }
+          }
+          Run-Python @('-m', 'pip', 'install', '-r', 'requirements.txt')
+          Run-Python @('validate.py')
           Set-Location $env:RUNNER_TEMP
           7z a -tzip IR-Project-Windows-x64.zip IR-Project
           if ($LASTEXITCODE) { exit $LASTEXITCODE }

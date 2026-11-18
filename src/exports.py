@@ -19,7 +19,7 @@ def write_csv(path, headers, rows):
 
 
 def write_json(path, data):
-    Path(path).write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+    Path(path).write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8', newline='\n')
 
 
 def export_all(model, output_dir, presets=PRESETS):
