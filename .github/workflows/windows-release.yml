@@ -41,7 +41,10 @@ jobs:
             }
           }
           Run-Python @('-m', 'pip', 'install', '-r', 'requirements.txt')
+          # Generate the reference exports with the bundled Windows math library.
+          Run-Python @('run_spark.py')
           Run-Python @('validate.py')
+          Run-Python @('tests/launcher_smoke.py')
           Set-Location $env:RUNNER_TEMP
           7z a -tzip IR-Project-Windows-x64.zip IR-Project
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
