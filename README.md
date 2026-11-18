@@ -1,33 +1,32 @@
 # Information Retrieval Project
 
-## Run the Windows x64 ZIP
+Import text documents to build a searchable collection. Spark records where each word appears. The search engine uses those positions to find exact phrases, then uses TF-IDF and cosine similarity to rank the matching documents. You can explore the calculations and export the results as CSV or JSON.
 
-1. Extract the entire ZIP to a short local path such as `C:\IR`. Allow about 1 GB of free space for the extracted files.
-2. Double-click `Launch_IR.bat`. The portable distribution includes Python, Java, PySpark, Flask and Waitress. It runs offline. Keep the console open during the demo.
-3. Click **Import Documents**. Choose one or more UTF-8 text files. Use **Choose files…** again to add documents from another folder, then **Import selection**.
-4. When Spark finishes, the ready screen stays visible for two seconds. Explore the index, matrices, search, query mathematics and exports. Open the original launcher address for an empty workspace. Importing from an active collection replaces it after success.
-5. Press Enter in the launcher console to stop the app. Collections live in memory for the current run.
+## How to run
 
-The supplied Fall 2026 dataset is in `data/`. Healthcare, Technology, Education and Business each contain ten documents. For a mixed demo, choose Healthcare’s `d1.txt` and Business’s `d1.txt`, then search for **patient care** and **customer service**. Both files keep their original names. Matrix columns have unique document IDs. The overview lists the ID and filename together.
+Double-click `Launch_IR.bat`.
 
-## Run from source on Linux, macOS or Windows
+## Calculation rules
 
-Use Python 3.12 and Java 17 or 21. On Windows, `Launch_IR.bat` uses the bundled runtime when present, or creates a virtual environment with the full requirements. On Linux or macOS:
+The same rules apply to every import. `N` is the number of selected documents. Importing all ten files from one supplied category gives `N = 10`.
 
-```sh
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python launcher.py --no-browser --headless
-```
+| Step | Rule |
+| --- | --- |
+| Tokenization | Convert text to lowercase and split it on whitespace. Punctuation stays attached to its token. The supplied documents contain no punctuation. |
+| Word positions | Count every token from left to right, starting at 1 in each document. An exact phrase matches when its tokens occupy consecutive positions in order. |
+| Term frequency (TF) | Count how many times a term occurs in the document. For a query vector, count its occurrences in the query. |
+| Document frequency (DF) | Count how many selected documents contain the term. Each document contributes at most once. |
+| Inverse document frequency (IDF) | Use the base-10 logarithm: `IDF = log₁₀(N / DF)`. A term present in every document has IDF zero. |
+| Weighted TF | Use `1 + log₁₀(TF)` when TF is positive. An absent term has weight zero. |
+| TF-IDF | Multiply weighted TF by the term’s collection IDF. Query terms use the same collection IDF. |
+| L2 normalization | For each document and query vector, calculate its length as the square root of the sum of its squared TF-IDF weights. Divide each weight by that length. A zero-length vector stays zero. |
+| Cosine similarity | Multiply the normalized query and document weights for each term, then sum the products. Rank matching documents from highest score to lowest. |
 
-Open the local address printed by the launcher. Each import runs real Spark positional indexing. TF-IDF, normalized vectors, exact phrase matching, Boolean AND / AND NOT and cosine rankings use the selected files. Suggested queries and their exports use the current vocabulary. Terms are lowercased and split on whitespace. With one document all IDF values are zero, so exact matches have zero cosine scores.
+## Worked example
 
-The app creates an empty `outputs/` folder at startup. Importing files and viewing **Export & report** leave it empty. **Download file** saves the selected CSV or JSON in that folder and sends the same file to your browser. **Download all results** saves one `ir-results.zip`. Downloading the same name again replaces that file. When the app starts again, it moves earlier app downloads to `previous_exports/` beside the folder.
+Import all ten Healthcare documents. In `d5.txt`, **patient** occurs at positions **1, 3 and 7**, so its TF is **3**. Nine documents contain the term, so its DF is **9**. Its TF-IDF weight in this document is approximately **0.0676** before normalization:
 
-For the separate offline Technology reference calculations, run `python run_spark.py`. That command writes to `artifacts/technology/`.
-
-## Validation
-
-Run `python validate.py` with the full dependencies installed. Run `python tests/launcher_smoke.py` with the launcher stopped. For browser validation, start the app and run `python tests/browser_smoke.py` with Playwright 1.62.0 and Chromium. Set `IR_BROWSER_EXECUTABLE` for a system Chromium. The browser test imports the Technology collection, checks the six pages, and then mixes files from two domains. It writes screenshots under `screenshots/`.
-
-The original project specification and theory guides are in `docs/`.
+```text
+Weighted TF = 1 + log₁₀(3) ≈ 1.4771
+IDF         = log₁₀(10 / 9) ≈ 0.0458
+TF-IDF      = (1 + log₁₀(3)) × log₁₀(10 / 9) ≈ 0.0676
