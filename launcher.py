@@ -23,8 +23,8 @@ INFO_PATH = Path(tempfile.gettempdir()) / 'lumen-ir-launcher-port.json'
 def acquire_instance_lock():
     """Use an OS-managed lock; it is automatically released after a crash or exit."""
     handle = LOCK_PATH.open('a+b')
-    handle.seek(0)
-    if not handle.read(1):
+    # Windows denies reads of the byte while the first launcher holds its lock.
+    if os.fstat(handle.fileno()).st_size == 0:
         handle.write(b'0')
         handle.flush()
     handle.seek(0)

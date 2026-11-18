@@ -1,6 +1,0 @@
-.git
-.venv*
-dist
-build
-__pycache__
-screenshots
