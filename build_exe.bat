@@ -7,7 +7,7 @@ if errorlevel 1 goto failed
 if errorlevel 1 goto failed
 ".venv-build\Scripts\python.exe" validate.py
 if errorlevel 1 goto failed
-".venv-build\Scripts\python.exe" -m PyInstaller --noconfirm --clean --onedir --console --collect-all pyspark --collect-all py4j --name IR_Search_Engine --add-data "templates;templates" --add-data "static;static" --add-data "data;data" --add-data "outputs;outputs" launcher.py
+".venv-build\Scripts\python.exe" -m PyInstaller --noconfirm --clean --onedir --console --collect-all pyspark --collect-all py4j --name IR_Search_Engine --add-data "templates;templates" --add-data "static;static" --add-data "data;data" launcher.py
 if errorlevel 1 goto failed
 echo The standalone build needs Java 17 or 21 on PATH for document imports.
 echo Build complete: dist\IR_Search_Engine\IR_Search_Engine.exe

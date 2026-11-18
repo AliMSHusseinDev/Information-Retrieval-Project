@@ -9,3 +9,5 @@ dist/
 *.log
 artifacts/
 .DS_Store
+/outputs/
+/previous_exports/

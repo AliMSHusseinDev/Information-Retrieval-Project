@@ -2,12 +2,38 @@
 
 import csv
 import json
+import tempfile
 from pathlib import Path
 from src.queries import PRESETS, search
 
 EXPORT_FILES = ['positional_index.json', 'raw_tf.csv', 'weighted_tf.csv', 'df_idf.csv',
                 'tfidf.csv', 'document_lengths.csv', 'normalized.csv', 'phrase_queries.json',
                 'boolean_queries.json', 'similarities.csv', 'rankings.csv', 'model.json']
+
+
+def prepare_downloads(directory):
+    """Start a new run with an empty export area, retaining earlier downloads."""
+    directory.mkdir(parents=True, exist_ok=True)
+    existing = [directory / name for name in [*EXPORT_FILES, 'ir-results.zip']
+                if (directory / name).is_file()]
+    if existing:
+        history = directory.parent / 'previous_exports'
+        history.mkdir(exist_ok=True)
+        previous = Path(tempfile.mkdtemp(prefix='run-', dir=history))
+        for path in existing:
+            path.rename(previous / path.name)
+
+
+def save_download(directory, name, data):
+    """Replace the selected file only after its complete contents are on disk."""
+    handle = tempfile.NamedTemporaryFile(dir=directory, delete=False)
+    staged = Path(handle.name)
+    try:
+        with handle:
+            handle.write(data)
+        staged.replace(directory / name)
+    finally:
+        staged.unlink(missing_ok=True)
 
 
 def write_csv(path, headers, rows):

@@ -8,6 +8,7 @@ from threading import Lock
 import zipfile
 from pathlib import Path
 from flask import Flask, jsonify, render_template, request, send_file, abort, Blueprint, g
+from src.exports import prepare_downloads, save_download
 from src.queries import search
 from src.imports import process_documents, read_uploads
 
@@ -22,7 +23,11 @@ PAGES = {
 }
 
 
-def create_app(root=ROOT):
+def create_app(root=ROOT, *, output_dir=None):
+    if output_dir is None:
+        project = Path(sys.executable).parent if getattr(sys, 'frozen', False) else root
+        output_dir = project / 'outputs'
+    prepare_downloads(output_dir)
     app = Flask(__name__, template_folder=str(root / 'templates'), static_folder=str(root / 'static'))
     app.json.sort_keys = False
     app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
@@ -131,11 +136,19 @@ def create_app(root=ROOT):
             with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
                 for filename, data in exports.items():
                     archive.writestr(filename, data)
-            buffer.seek(0)
-            return send_file(buffer, as_attachment=True, download_name='ir-results.zip')
-        if name not in exports:
+            name = 'ir-results.zip'
+            data = buffer.getvalue()
+        elif name in exports:
+            data = exports[name]
+        else:
             abort(404)
-        return send_file(io.BytesIO(exports[name]), as_attachment=True, download_name=name)
+        if request.method == 'GET':
+            try:
+                save_download(output_dir, name, data)
+            except OSError:
+                app.logger.exception('Could not save export %s', name)
+                return jsonify(error='Could not save the file in outputs. Close any open copy and check folder permissions.'), 500
+        return send_file(io.BytesIO(data), as_attachment=True, download_name=name)
 
     app.register_blueprint(views)
     app.register_blueprint(views, url_prefix='/c/<key>', name='active')

@@ -22,7 +22,9 @@ python3.12 -m venv .venv
 
 Open the local address printed by the launcher. Each import runs real Spark positional indexing. TF-IDF, normalized vectors, exact phrase matching, Boolean AND / AND NOT and cosine rankings use the selected files. Suggested queries and their exports use the current vocabulary. Terms are lowercased and split on whitespace. With one document all IDF values are zero, so exact matches have zero cosine scores.
 
-The offline reference exports in `outputs/` correspond to the Technology assignment. To rebuild them from a development environment, run `python run_spark.py`. The web app creates its own exports during import.
+The app creates an empty `outputs/` folder at startup. Importing files and viewing **Export & report** leave it empty. **Download file** saves the selected CSV or JSON in that folder and sends the same file to your browser. **Download all results** saves one `ir-results.zip`. Downloading the same name again replaces that file. When the app starts again, it moves earlier app downloads to `previous_exports/` beside the folder.
+
+For the separate offline Technology reference calculations, run `python run_spark.py`. That command writes to `artifacts/technology/`.
 
 ## Validation
 
