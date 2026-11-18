@@ -22,11 +22,3 @@ The same rules apply to every import. `N` is the number of selected documents. I
 | L2 normalization | For each document and query vector, calculate its length as the square root of the sum of its squared TF-IDF weights. Divide each weight by that length. A zero-length vector stays zero. |
 | Cosine similarity | Multiply the normalized query and document weights for each term, then sum the products. Rank matching documents from highest score to lowest. |
 
-## Worked example
-
-Import all ten Healthcare documents. In `d5.txt`, **patient** occurs at positions **1, 3 and 7**, so its TF is **3**. Nine documents contain the term, so its DF is **9**. Its TF-IDF weight in this document is approximately **0.0676** before normalization:
-
-```text
-Weighted TF = 1 + log₁₀(3) ≈ 1.4771
-IDF         = log₁₀(10 / 9) ≈ 0.0458
-TF-IDF      = (1 + log₁₀(3)) × log₁₀(10 / 9) ≈ 0.0676
