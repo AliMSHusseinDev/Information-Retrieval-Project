@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <base href="{{ prefix }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0b1220" />
     <title>{{ title }} · IR Project</title>
@@ -23,10 +24,10 @@
       src="{{ url_for('static', filename='js/main.js') }}"
     ></script>
   </head>
-  <body data-page="{{ page }}">
+  <body data-page="{{ page }}" data-loaded="{{ 1 if loaded else 0 }}">
     <a class="skip" href="#main">Skip to content</a>
     <aside class="sidebar" id="sidebar">
-      <a href="/" class="brand"
+      <a href="./" class="brand"
         ><img
           src="{{ url_for('static', filename='assets/logo.svg') }}"
           alt=""
@@ -42,7 +43,7 @@
         {% set icons = {'dashboard':'◫', 'index':'≡', 'analytics':'▥', 'search':'⌕', 'mathematics':'ƒ', 'reports':'↓'} %}
         {% set labels = {'dashboard':'Overview', 'index':'Positional index', 'analytics':'TF-IDF analytics', 'search':'Search engine', 'mathematics':'Query mathematics', 'reports':'Export & report'} %}
         {% for key in pages %}
-        <a href="{{ '/' if key == 'dashboard' else '/' + key }}"
+        <a href="{{ './' if key == 'dashboard' else key }}"
            aria-label="{{ labels[key] }}"
            class="nav-link {{ 'active' if key == page else '' }}"
            aria-current="{{ 'page' if key == page else 'false' }}">
@@ -68,7 +69,7 @@
         </div>
         <div class="top-actions">
           <span class="status"
-            ><i></i> <span id="header-status">Checking collection</span></span
+            ><i></i> <span id="header-status">{{ "Collection ready" if loaded else "No documents" }}</span></span
           ><span class="header-divider"></span
           ><button
             id="help-button"
@@ -76,29 +77,44 @@
             aria-label="About this project"
           >
             ?</button
-          ><span class="avatar" title="Technology dataset">T</span>
+          >{% if loaded %}<button class="button primary" data-import>Import Documents</button>{% endif %}
         </div>
       </header>
       <main id="main">
         <div class="page-heading">
           <div>
             <p class="eyebrow">
-              TECHNOLOGY COLLECTION <span>/</span> INFORMATION STORAGE &
+              DOCUMENT COLLECTION <span>/</span> INFORMATION STORAGE &
               RETRIEVAL
             </p>
-            <h1>{{ title }}</h1>
-            <p class="page-description">{{ description }}</p>
+            <h1>{{ title if loaded else "Document workspace" }}</h1>
+            {% if loaded %}<p class="page-description">{{ description }}</p>{% endif %}
           </div>
           {% block heading_action %}{% endblock %}
         </div>
         <div id="app-error" class="notice error" role="alert" hidden></div>
         {% block content %}{% endblock %}
         <footer>
-          <span>IR Project <span class="muted">/ Technology edition</span></span
+          <span>IR Project</span
           ><span>Built on Apache Spark · Calculated with precision</span>
         </footer>
       </main>
     </div>
+    <dialog id="import-dialog" aria-labelledby="import-title">
+      <h2 id="import-title">Import documents</h2>
+      <p>Select UTF-8 .txt files. Add files again to mix folders in one collection.</p>
+      <input type="file" id="import-files" accept=".txt,text/plain" multiple hidden />
+      <button type="button" class="button" id="choose-files">Choose files…</button>
+      <ol id="file-list"></ol>
+      <p id="import-message" role="status"></p>
+      <div class="import-actions"><button class="button" id="cancel-import">Cancel</button>
+      <button class="button primary" id="run-import" disabled>Import selection</button></div>
+    </dialog>
+    <dialog id="progress-dialog" aria-labelledby="progress-title">
+      <div class="import-pulse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      <h2 id="progress-title" role="status">Indexing your documents…</h2>
+      <p id="progress-detail">Spark is building the positional index and calculating document weights.</p>
+    </dialog>
     <dialog id="help-dialog">
       <div class="dialog-heading">
         <h2>From words to relevance</h2>
@@ -107,7 +123,7 @@
         </button>
       </div>
       <p>
-        This Technology collection uses real PySpark positional indexing,
+        The imported collection uses real PySpark positional indexing,
         base-10 TF-IDF, and normalized cosine similarity.
       </p>
       <p>
@@ -119,7 +135,7 @@
         Read the English PDF discussion guides in the
         repository’s <code>docs/</code> folder.
       </p>
-      <a class="button primary" href="/mathematics"
+      <a class="button primary" href="mathematics"
         >Explore the mathematics →</a
       >
     </dialog>

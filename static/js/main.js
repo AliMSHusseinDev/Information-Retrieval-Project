@@ -1,3 +1,4 @@
+import "./import.js";
 import { barChart } from "./charts.js";
 
 const $ = (id) => document.getElementById(id);
@@ -88,14 +89,14 @@ function highlight(text, ranges) {
 }
 function saveSearch(value) {
   try {
-    sessionStorage.setItem("lumen-query", JSON.stringify(value));
+    sessionStorage.setItem(`lumen-query:${document.baseURI}`, JSON.stringify(value));
   } catch {
     /* Storage can be disabled. */
   }
 }
 function restoredSearch() {
   try {
-    return JSON.parse(sessionStorage.getItem("lumen-query"));
+    return JSON.parse(sessionStorage.getItem(`lumen-query:${document.baseURI}`));
   } catch {
     return null;
   }
@@ -103,6 +104,7 @@ function restoredSearch() {
 
 function dashboard() {
   const docs = Object.keys(model.documents);
+  $("imported-names").append(table(["Document", "Original file", "Preview"], docs.map(doc => [doc, model.filenames[doc], model.documents[doc].slice(0, 80)])));
   const totalTokens = Object.values(model.documents).reduce(
     (sum, text) => sum + text.split(/\s+/).length,
     0,
@@ -116,7 +118,7 @@ function dashboard() {
       "≡",
     ],
     ["Total tokens", totalTokens, "Every occurrence, preserved", "▥"],
-    ["Assigned queries", presets.length, "2 phrase · 2 Boolean", "⌕"],
+    ["Suggested queries", presets.length, "From the imported text", "⌕"],
   ];
   replace(
     $("kpi-grid"),
@@ -185,20 +187,27 @@ function dashboard() {
   replace(
     $("dashboard-presets"),
     presets.map((preset, i) => {
-      const node = link(preset.label, `/search?preset=${i}`, "query-link");
+      const node = link(preset.label, `search?preset=${i}`, "query-link");
       node.append(element("span", "", "→"));
       return node;
     }),
   );
-  document.querySelectorAll(".vector-card b").forEach((node) => {
-    node.textContent = format(model.normalized.machine.d1);
+  document.querySelectorAll(".vector-card").forEach((node, i) => {
+    const term = frequencies[i]?.[0] ?? frequencies[0][0];
+    node.querySelector("span").textContent = term;
+    node.querySelector("b").textContent = format(model.normalized[term][docs[0]]);
   });
 }
 
+function documentLabel(doc) {
+  const name = model.filenames[doc];
+  return name === doc + ".txt" ? name : doc + " · " + name;
+}
+
 function indexExplorer() {
-  let selected = "machine";
-  let selectedDoc = "d1";
   const terms = Object.keys(model.index);
+  let selected = terms.includes("machine") ? "machine" : terms[0];
+  let selectedDoc = Object.keys(model.index[selected])[0];
   $("term-count").textContent = terms.length;
   function renderVocabulary() {
     const visible = terms.filter((term) =>
@@ -259,7 +268,7 @@ function indexExplorer() {
         return node;
       }),
     );
-    $("preview-document").textContent = `${selectedDoc}.txt`;
+    $("preview-document").textContent = documentLabel(selectedDoc);
     const positions = postings[selectedDoc];
     $("document-preview").replaceChildren(
       highlight(
@@ -350,7 +359,7 @@ function analytics() {
           ? "L2 magnitude before normalization"
           : "Terms × documents · computed from the Spark index";
     $("matrix-export").href =
-      `/download/${type === "lengths" ? "document_lengths" : type}.csv`;
+      `download/${type === "lengths" ? "document_lengths" : type}.csv`;
     const filter = $("matrix-search").value.trim().toLowerCase();
     const shownDocs = $("document-filter").value
       ? [$("document-filter").value]
@@ -472,7 +481,7 @@ function resultCard(result, query) {
   const identity = element("div", "result-identity");
   identity.append(
     element("span", "rank-badge", String(result.rank).padStart(2, "0")),
-    element("strong", "", `${result.document}.txt`),
+    element("strong", "", documentLabel(result.document)),
   );
   if (result.rank === 1) identity.append(element("small", "", "TOP MATCH"));
   const score = element("div", "score", format(result.similarity));
@@ -545,7 +554,7 @@ function renderResults(data) {
           : "These terms do not occur consecutively in the required order, or the Boolean filter removes the matches.",
       ),
     );
-    empty.append(link("Explore the vocabulary →", "/index"));
+    empty.append(link("Explore the vocabulary →", "index"));
     $("search-results").append(empty);
   }
   barChart(
@@ -798,7 +807,7 @@ function queryPage(isMath) {
     $("query-message").classList.remove("invalid");
     $("query-message").textContent = "Calculating matches and similarity…";
     try {
-      const data = await request("/api/search", {
+      const data = await request("api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -840,7 +849,7 @@ function queryPage(isMath) {
     setMode("phrase");
     saveSearch(null);
     $("query-message").textContent =
-      "Enter a phrase or choose one of the four assigned queries.";
+      "Enter a phrase or choose one of the suggested queries.";
     $("query-message").classList.remove("invalid");
     if (isMath)
       $("math-content").replaceChildren(
@@ -877,7 +886,7 @@ function queryPage(isMath) {
   if (initial) {
     populate(initial);
     submit();
-  } else if (isMath) {
+  } else if (isMath && presets.length) {
     populate(presets[0]);
     submit();
   } else
@@ -894,7 +903,7 @@ async function reports() {
       "Positional index",
       "Every term, document, and 1-based position.",
     ],
-    "raw_tf.csv": ["Raw TF matrix", "All 27 × 10 term occurrence counts."],
+    "raw_tf.csv": ["Raw TF matrix", "Term occurrence counts across the imported files."],
     "weighted_tf.csv": [
       "Weighted TF matrix",
       "Logarithmic term weights: 1 + log10(TF).",
@@ -919,18 +928,18 @@ async function reports() {
     ],
     "similarities.csv": [
       "Similarity scores",
-      "Calculated cosine scores for all assigned queries.",
+      "Calculated cosine scores for all suggested queries.",
     ],
     "rankings.csv": [
       "Document rankings",
-      "Ordered matches for the four assigned queries.",
+      "Ordered matches for the suggested queries.",
     ],
     "model.json": [
       "Complete processing model",
       "The full-precision Spark-generated collection.",
     ],
   };
-  const files = await request("/api/exports");
+  const files = await request("api/exports");
   $("exports-count").textContent =
     `${files.filter((file) => file.ready).length} / ${files.length} FILES READY`;
   replace(
@@ -958,7 +967,7 @@ async function reports() {
         ),
       );
       if (file.ready)
-        card.append(link("Download file ↓", "/download/" + file.name));
+        card.append(link("Download file ↓", "download/" + file.name));
       return card;
     }),
   );
@@ -974,8 +983,8 @@ $("collapse-sidebar").addEventListener("click", () => {
 });
 $("help-button").addEventListener("click", () => $("help-dialog").showModal());
 $("close-help").addEventListener("click", () => $("help-dialog").close());
-try {
-  const data = await request("/api/model");
+if (document.body.dataset.loaded === "1") try {
+  const data = await request("api/model");
   model = data.model;
   presets = data.presets;
   $("header-status").textContent = "Collection ready";

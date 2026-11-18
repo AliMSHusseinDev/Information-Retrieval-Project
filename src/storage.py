@@ -12,7 +12,7 @@ def load_model(root):
         model = json.loads((root / 'outputs' / 'model.json').read_text(encoding='utf-8'))
         if model['metadata']['schema_version'] != SCHEMA_VERSION:
             raise ValueError('Processing format changed.')
-        if model['metadata']['fingerprint'] != dataset_fingerprint(root / 'data'):
+        if model['metadata']['fingerprint'] != dataset_fingerprint(root / 'data' / '2. Technology'):
             raise ValueError('The dataset has changed since preprocessing.')
         return model
     except (OSError, ValueError, KeyError) as error:

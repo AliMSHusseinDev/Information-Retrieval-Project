@@ -14,12 +14,12 @@ def main():
     parser.add_argument('--master', default='local[2]', help='Spark master (default: two local workers)')
     args = parser.parse_args()
     root = Path(__file__).resolve().parent
-    documents = read_documents(root / 'data')
-    index, spark_version = build_index(root / 'data', args.master)
+    documents = read_documents(root / 'data' / '2. Technology')
+    index, spark_version = build_index(root / 'data' / '2. Technology', args.master)
     model = dict(documents=documents, index=index, **calculate_collection(index, documents))
     model['metadata'] = dict(schema_version=SCHEMA_VERSION, engine='Apache Spark / PySpark',
                              spark_version=spark_version, master=args.master,
-                             fingerprint=dataset_fingerprint(root / 'data'),
+                             fingerprint=dataset_fingerprint(root / 'data' / '2. Technology'),
                              generated_at=datetime.now(timezone.utc).isoformat())
     export_all(model, root / 'outputs')
     print(f'Spark {spark_version}: {len(documents)} documents, {len(index)} terms, '

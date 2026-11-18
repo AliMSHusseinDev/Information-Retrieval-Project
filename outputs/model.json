@@ -1624,7 +1624,7 @@
     "engine": "Apache Spark / PySpark",
     "spark_version": "4.0.1",
     "master": "local[2]",
-    "fingerprint": "2a1e352200ffc3471eb4df5288c2b8eff22f1f30754fe9bd719c684b5c6f8199",
-    "generated_at": "2026-11-14T15:00:12.939041+00:00"
+    "fingerprint": "be738ff4472c398f2dc9776846ff01cf0bafac35a37f49345c1d638374ce2095",
+    "generated_at": "2026-11-18T16:40:34.787612+00:00"
   }
 }

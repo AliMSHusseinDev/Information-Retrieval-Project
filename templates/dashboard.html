@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block heading_action %}<a
   class="button primary"
-  href="/search"
+  href="search"
   >Open search engine <span>→</span></a
 >{% endblock %} {% block content %}
 <section class="hero">
@@ -11,7 +11,7 @@
       Explore how words become vectors, phrases become matches, and similarity
       becomes a ranked answer.
     </p>
-    <a class="text-link" href="/mathematics"
+    <a class="text-link" href="mathematics"
       >Follow a query through the engine <span>→</span></a
     >
   </div>
@@ -88,6 +88,7 @@
   </div>
   <div class="pipeline" id="pipeline"></div>
 </section>
+<details class="panel"><summary>Imported documents</summary><div id="imported-names" class="table-scroll"></div></details>
 <section class="chart-grid lower-grid">
   <article class="panel">
     <div class="panel-heading">
@@ -107,8 +108,8 @@
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <h3>Try the assigned queries</h3>
-        <p>Four ways to explore the same collection</p>
+        <h3>Try the suggested queries</h3>
+        <p>Based on the imported text</p>
       </div>
     </div>
     <div id="dashboard-presets" class="query-list"></div>

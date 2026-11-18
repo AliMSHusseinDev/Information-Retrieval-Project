@@ -22,7 +22,7 @@ def write_json(path, data):
     Path(path).write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
 
 
-def export_all(model, output_dir):
+def export_all(model, output_dir, presets=PRESETS):
     """Save every mandatory calculation and all four freshly calculated queries."""
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
@@ -35,7 +35,7 @@ def export_all(model, output_dir):
     write_csv(output / 'df_idf.csv', ['term', 'df', 'idf'],
               [[term, model['df'][term], model['idf'][term]] for term in model['index']])
     write_csv(output / 'document_lengths.csv', ['document', 'length'], model['lengths'].items())
-    queries = [dict(label=p['label'], **search(model, p['phrase'], p['mode'], p['other'])) for p in PRESETS]
+    queries = [dict(label=p['label'], **search(model, p['phrase'], p['mode'], p['other'])) for p in presets]
     write_json(output / 'phrase_queries.json', queries[:2])
     write_json(output / 'boolean_queries.json', queries[2:])
     rows = [[q['label'], r['document'], r['similarity']] for q in queries for r in q['results']]

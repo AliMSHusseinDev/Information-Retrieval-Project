@@ -1,13 +1,15 @@
 """Thin Flask routes. All retrieval mathematics lives in src/, independently of HTTP."""
 
 import io
+import secrets
 import sys
+from collections import OrderedDict
+from threading import Lock
 import zipfile
 from pathlib import Path
-from flask import Flask, jsonify, render_template, request, send_file, abort
-from src.exports import EXPORT_FILES
-from src.queries import PRESETS, search
-from src.storage import load_model
+from flask import Flask, jsonify, render_template, request, send_file, abort, Blueprint, g
+from src.queries import search
+from src.imports import process_documents, read_uploads
 
 ROOT = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent))
 PAGES = {
@@ -21,55 +23,92 @@ PAGES = {
 
 
 def create_app(root=ROOT):
-    """Create a local application; fail clearly if Spark preprocessing needs rebuilding."""
-    model = load_model(root)
     app = Flask(__name__, template_folder=str(root / 'templates'), static_folder=str(root / 'static'))
-    app.json.sort_keys = False  # Keep d1, d2, ..., d10 in natural order in the browser.
-    app.config['MAX_CONTENT_LENGTH'] = 4096
+    app.json.sort_keys = False
+    app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
+    views = Blueprint('collection', __name__)
+    collections = OrderedDict()
+    access = Lock()
+    processing = Lock()
 
-    def check_current_model():
-        """Reject stale disk data and a rebuilt cache until the app is restarted."""
-        current = load_model(root)
-        if current['metadata'] != model['metadata']:
-            raise RuntimeError('Processing outputs were rebuilt. Restart the application to load them.')
+    @views.url_value_preprocessor
+    def select_collection(endpoint, values):
+        key = values.pop('key', None)
+        with access:
+            g.collection = collections.get(key)
+            if g.collection:
+                collections.move_to_end(key)
+        g.key = key
+
+    @views.before_request
+    def require_collection():
+        if not g.collection and request.endpoint.rsplit('.', 1)[-1] not in ('page_view', 'health', 'import_files'):
+            return jsonify(error='Import documents to open a collection.'), 409
+
+    @views.post('/api/import')
+    def import_files():
+        try:
+            documents, names = read_uploads(request.files.getlist('documents'))
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
+        if not processing.acquire(blocking=False):
+            return jsonify(error='An import is running. Try again when it finishes.'), 409
+        try:
+            collection = process_documents(documents, names)
+            key = secrets.token_urlsafe(20)
+            with access:
+                collections[key] = collection
+                collections.pop(g.key, None)
+                if len(collections) > 4:
+                    collections.popitem(last=False)
+            return jsonify(url=f'/c/{key}/')
+        except Exception:
+            app.logger.exception('Spark import failed')
+            return jsonify(error='Spark could not finish the import. Check the launcher console and retry.'), 500
+        finally:
+            processing.release()
+
+    @app.errorhandler(413)
+    def too_large(error):
+        return jsonify(error='Choose a smaller batch (under 2 MB per import).'), 413
 
     @app.after_request
     def response_headers(response):
+        if request.endpoint != 'static':
+            response.cache_control.no_store = True
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'")
         return response
 
-    @app.get('/')
-    @app.get('/<page>')
+    @views.get('/')
+    @views.get('/<page>')
     def page_view(page='dashboard'):
         if page not in PAGES:
             abort(404)
-        return render_template(page + '.html', page=page, pages=PAGES,
+        return render_template((page if g.collection else 'empty') + '.html', page=page, pages=PAGES,
                                title=PAGES[page][0], description=PAGES[page][1],
-                               document_count=len(model['documents']))
+                               loaded=bool(g.collection), prefix=f'/c/{g.key}/' if g.collection else '/')
 
-    @app.get('/api/model')
+    @views.get('/api/model')
     def model_data():
-        # Do not silently serve old statistics if documents change while Flask runs.
-        check_current_model()
-        return jsonify(model=model, presets=PRESETS)
+        model, presets, _ = g.collection
+        return jsonify(model=model, presets=presets)
 
-    @app.get('/api/health')
+    @views.get('/api/health')
     def health():
-        check_current_model()
-        return jsonify(application='lumen-ir', fingerprint=model['metadata']['fingerprint'])
+        return jsonify(application='lumen-ir', loaded=bool(g.collection))
 
-    @app.get('/api/index')
+    @views.get('/api/index')
     def index_data():
-        check_current_model()
+        model = g.collection[0]
         term = request.args.get('term', '').lower().strip()
         return jsonify(model['index'].get(term, {}) if term else model['index'])
 
-    @app.post('/api/search')
+    @views.post('/api/search')
     def search_data():
-        check_current_model()
+        model = g.collection[0]
         body = request.get_json(silent=True)
         if not isinstance(body, dict):
             return jsonify(error='Send a JSON object containing a phrase and mode.'), 400
@@ -79,33 +118,27 @@ def create_app(root=ROOT):
             # Validation errors are expected user input, not server tracebacks.
             return jsonify(error='Enter a phrase (up to 300 characters / 40 tokens) and a valid search mode. Boolean modes require two phrases.'), 400
 
-    @app.get('/api/exports')
+    @views.get('/api/exports')
     def export_status():
-        check_current_model()
-        return jsonify([dict(name=name, ready=(root / 'outputs' / name).is_file(),
-                             bytes=(root / 'outputs' / name).stat().st_size if (root / 'outputs' / name).is_file() else 0)
-                        for name in EXPORT_FILES])
+        return jsonify([dict(name=name, ready=True, bytes=len(data))
+                        for name, data in g.collection[2].items()])
 
-    @app.get('/download/<name>')
+    @views.get('/download/<name>')
     def download(name):
-        check_current_model()
+        exports = g.collection[2]
         if name == 'all.zip':
-            if any(not (root / 'outputs' / file).is_file() for file in EXPORT_FILES):
-                return jsonify(error='Some outputs are missing. Run python run_spark.py.'), 409
             buffer = io.BytesIO()
             with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
-                for file in EXPORT_FILES:
-                    archive.write(root / 'outputs' / file, file)
+                for filename, data in exports.items():
+                    archive.writestr(filename, data)
             buffer.seek(0)
-            return send_file(buffer, mimetype='application/zip', as_attachment=True, download_name='technology-ir-results.zip')
-        if name not in EXPORT_FILES or not (root / 'outputs' / name).is_file():
+            return send_file(buffer, as_attachment=True, download_name='ir-results.zip')
+        if name not in exports:
             abort(404)
-        return send_file(root / 'outputs' / name, as_attachment=True)
+        return send_file(io.BytesIO(exports[name]), as_attachment=True, download_name=name)
 
-    @app.errorhandler(RuntimeError)
-    def stale_outputs(error):
-        return jsonify(error=str(error)), 409
-
+    app.register_blueprint(views)
+    app.register_blueprint(views, url_prefix='/c/<key>', name='active')
     return app
 
 

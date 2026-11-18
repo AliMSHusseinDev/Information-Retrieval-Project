@@ -30,34 +30,31 @@ def dataset_fingerprint(data_dir):
     return digest.hexdigest()
 
 
-def emit_positions(file_record):
-    """Spark flatMap worker: emit ((term, document), 1-based position) records."""
-    filename, text = file_record
-    document_id = filename.replace('\\', '/').rsplit('/', 1)[-1][:-4]
-    return [((term, document_id), position)
-            for position, term in enumerate(text.lower().split(), start=1)]
-
-
 def build_index(data_dir, master='local[2]'):
-    """Read files with wholeTextFiles and group all positions using Spark RDDs.
+    """Index a local folder using the same Spark pipeline as the web import."""
+    return index_documents(read_documents(data_dir), master)
 
-    Input: a folder of d<number>.txt files. Output: sorted term -> doc -> positions,
-    plus Spark version. Only the finished small index is collected to the driver.
-    """
-    from pyspark.sql import SparkSession
 
-    documents = read_documents(data_dir)
-    spark = (SparkSession.builder.master(master).appName('TechnologyPositionalIndex')
-             .config('spark.ui.enabled', 'false').getOrCreate())
-    spark.sparkContext.setLogLevel('ERROR')
+def index_documents(documents, master='local[2]'):
+    """Group positions in Spark SQL directly from the selected text, including on Windows."""
+    import json
+    import os
+    from pyspark.sql import SparkSession, functions as F
+
+    os.environ.setdefault('SPARK_LOCAL_IP', '127.0.0.1')
+    spark = (SparkSession.builder.master(master).appName('Document import')
+             .config('spark.ui.enabled', 'false').config('spark.sql.shuffle.partitions', '2')
+             .getOrCreate())
     try:
-        files = spark.sparkContext.wholeTextFiles(Path(data_dir).resolve().as_uri() + '/*.txt')
-        grouped = files.flatMap(emit_positions).groupByKey().mapValues(lambda values: sorted(values))
-        records = grouped.collect()
+        batch = [{'doc': doc, 'tokens': text.lower().split()} for doc, text in documents.items()]
+        parsed = F.from_json(F.lit(json.dumps(batch)), 'array<struct<doc:string,tokens:array<string>>>')
+        docs = spark.range(1).select(F.explode(parsed).alias('entry'))
+        terms = docs.select('entry.doc', F.posexplode('entry.tokens').alias('offset', 'term'))
+        postings = terms.groupBy('term', 'doc').agg(
+            F.sort_array(F.collect_list(F.col('offset') + 1)).alias('positions'))
         index = {}
-        for (term, doc), positions in sorted(records, key=lambda row: (row[0][0], document_number(row[0][1]))):
-            if doc in documents:
-                index.setdefault(term, {})[doc] = positions
+        for row in sorted(postings.collect(), key=lambda r: (r.term, document_number(r.doc))):
+            index.setdefault(row.term, {})[row.doc] = row.positions
         return index, spark.version
     finally:
         spark.stop()

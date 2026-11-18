@@ -1,7 +1,7 @@
 """Focused unittest validation against the supplied PDF; exits nonzero on failure.
 
 Run after real Spark preprocessing: python run_spark.py && python validate.py.
-No Spark process is needed to validate or interactively search the saved output.
+The HTTP checks import the Technology collection through the live Spark pipeline.
 """
 import csv
 import io
@@ -28,6 +28,12 @@ class TechnologyValidation(unittest.TestCase):
     def setUpClass(cls):
         cls.model = load_model(ROOT)
         cls.client = create_app().test_client()
+        files = sorted((ROOT / 'data' / '2. Technology').glob('*.txt'))
+        response = cls.client.post('/api/import', data={
+            'documents': [(io.BytesIO(file.read_bytes()), file.name) for file in files]})
+        if response.status_code != 200:
+            raise AssertionError(response.get_json())
+        cls.base = response.json['url']
         cls.reference_index = {}
         for term, postings in POSTINGS.items():
             cls.reference_index[term] = {}
@@ -37,7 +43,7 @@ class TechnologyValidation(unittest.TestCase):
 
     def test_01_original_dataset_and_spark_provenance(self):
         expected = {f'd{i}': text for i, text in enumerate(DOCUMENTS, 1)}
-        self.assertEqual(read_documents(ROOT / 'data'), expected)
+        self.assertEqual(read_documents(ROOT / 'data' / '2. Technology'), expected)
         self.assertEqual(self.model['documents'], expected)
         self.assertEqual(len(self.model['index']), 27)
         self.assertEqual(sum(len(text.split()) for text in expected.values()), 64)
@@ -112,13 +118,15 @@ class TechnologyValidation(unittest.TestCase):
 
     def test_08_gui_routes_and_live_api(self):
         for route in ['/', '/index', '/analytics', '/search', '/mathematics', '/reports']:
-            response = self.client.get(route)
+            response = self.client.get(self.base + route.lstrip("/"))
             self.assertEqual(response.status_code, 200)
             self.assertIn(b'IR Project', response.data)
-        self.assertEqual(self.client.get('/api/model').json['model'], self.model)
-        self.assertEqual(self.client.get('/api/index?term=machine').json, self.reference_index['machine'])
+        imported = self.client.get(self.base + 'api/model').json['model']
+        for key in self.model.keys() - {'metadata'}:
+            self.assertEqual(imported[key], self.model[key])
+        self.assertEqual(self.client.get(self.base + 'api/index?term=machine').json, self.reference_index['machine'])
         for preset, expected in zip(PRESETS, RANKINGS):
-            result = self.client.post('/api/search', json=preset)
+            result = self.client.post(self.base + 'api/search', json=preset)
             self.assertEqual(result.status_code, 200)
             self.assertEqual([row['document'] for row in result.json['results']], [doc for doc, _ in expected])
 
@@ -126,14 +134,14 @@ class TechnologyValidation(unittest.TestCase):
         for payload in [None, [], {}, {'phrase': []}, {'phrase': ''}, {'phrase': 'x' * 301},
                         {'phrase': 'machine', 'mode': 'invalid'}, {'phrase': 'machine', 'mode': 'and'},
                         {'phrase': 'machine', 'mode': 'and_not', 'other': 42}]:
-            self.assertEqual(self.client.post('/api/search', json=payload).status_code, 400)
-        self.assertEqual(self.client.get('/download/not-allowed.txt').status_code, 404)
-        self.assertEqual(self.client.get('/download/../app.py').status_code, 404)
-        self.assertEqual(self.client.get('/missing').status_code, 404)
-        self.assertEqual(self.client.post('/api/search', json={'phrase': '<script>alert(1)</script>'}).json['count'], 0)
+            self.assertEqual(self.client.post(self.base + 'api/search', json=payload).status_code, 400)
+        self.assertEqual(self.client.get(self.base + 'download/not-allowed.txt').status_code, 404)
+        self.assertEqual(self.client.get(self.base + 'download/../app.py').status_code, 404)
+        self.assertEqual(self.client.get(self.base + 'missing').status_code, 404)
+        self.assertEqual(self.client.post(self.base + 'api/search', json={'phrase': '<script>alert(1)</script>'}).json['count'], 0)
 
     def test_10_exported_matrices_and_queries(self):
-        self.assertTrue(all(row['ready'] for row in self.client.get('/api/exports').json))
+        self.assertTrue(all(row['ready'] for row in self.client.get(self.base + 'api/exports').json))
         self.assertEqual(json.loads((ROOT / 'outputs/positional_index.json').read_text()), self.reference_index)
         for name in ['raw_tf', 'weighted_tf', 'tfidf', 'normalized']:
             with (ROOT / 'outputs' / (name + '.csv')).open() as handle:
@@ -147,41 +155,41 @@ class TechnologyValidation(unittest.TestCase):
             for stored, preset in zip(values, chosen):
                 self.assertEqual(stored, dict(label=preset['label'], **search(self.model, preset['phrase'], preset['mode'], preset['other'])))
         for name in EXPORT_FILES:
-            response = self.client.get('/download/' + name)
+            response = self.client.get(self.base + 'download/' + name)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data, (ROOT / 'outputs' / name).read_bytes())
+            if name == 'model.json':
+                self.assertEqual(response.json, self.client.get(self.base + 'api/model').json['model'])
+            else:
+                self.assertEqual(response.data, (ROOT / 'outputs' / name).read_bytes())
             response.close()
-        response = self.client.get('/download/all.zip')
+        response = self.client.get(self.base + 'download/all.zip')
         with zipfile.ZipFile(io.BytesIO(response.data)) as archive:
             self.assertEqual(set(archive.namelist()), set(EXPORT_FILES))
             for name in EXPORT_FILES:
-                self.assertEqual(archive.read(name), (ROOT / 'outputs' / name).read_bytes())
+                self.assertEqual(archive.read(name), self.client.get(self.base + 'download/' + name).data)
         response.close()
 
-    def test_11_stale_missing_outputs_are_rejected(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+    def test_11_empty_start_and_atomic_replacement(self):
+        for route in ('/api/model', '/api/index', '/api/exports', '/download/all.zip'):
+            self.assertEqual(self.client.get(route).status_code, 409)
+        self.assertFalse(self.client.get('/api/health').json['loaded'])
+        self.assertIn(b'Import Documents', self.client.get('/').data)
+        for contents, name in [(b'', 'empty.txt'), (b'hello', 'wrong.csv'), (b'\xff', 'bad.txt')]:
+            response = self.client.post(self.base + 'api/import',
+                                        data={'documents': (io.BytesIO(contents), name)})
+            self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.client.get(self.base + 'api/index').json, self.reference_index)
+
+    def test_12_offline_reference_freshness(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
             with self.assertRaises(RuntimeError):
                 load_model(root)
             shutil.copytree(ROOT / 'data', root / 'data')
             shutil.copytree(ROOT / 'outputs', root / 'outputs')
-            app = create_app(root)
-            (root / 'data/d1.txt').write_text('changed data')
+            (root / 'data' / '2. Technology' / 'd1.txt').write_text('changed')
             with self.assertRaises(RuntimeError):
                 load_model(root)
-            with app.test_client() as client:
-                self.assertEqual(client.get('/api/model').status_code, 409)
-                self.assertEqual(client.post('/api/search', json={'phrase': 'machine learning'}).status_code, 409)
-                self.assertEqual(client.get('/download/all.zip').status_code, 409)
-            # Even valid regenerated files must not be mixed with an old in-memory model.
-            shutil.copyfile(ROOT / 'data/d1.txt', root / 'data/d1.txt')
-            updated = json.loads((root / 'outputs/model.json').read_text())
-            updated['metadata']['generated_at'] = 'a-new-preprocessing-run'
-            (root / 'outputs/model.json').write_text(json.dumps(updated))
-            with app.test_client() as client:
-                response = client.get('/api/model')
-                self.assertEqual(response.status_code, 409)
-                self.assertIn('Restart', response.json['error'])
 
 
 if __name__ == '__main__':

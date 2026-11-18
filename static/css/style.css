@@ -1916,3 +1916,25 @@ body.sidebar-collapsed .sidebar-bottom {
     scroll-behavior: auto !important;
   }
 }
+
+.import-welcome { text-align: center; padding: clamp(2rem, 8vw, 6rem) 1.5rem; }
+.import-welcome .empty-icon { margin: 0 auto 1rem; }
+.import-welcome p { max-width: 48ch; margin: 1rem auto 1.6rem; }
+#import-dialog, #progress-dialog { width: min(30rem, calc(100% - 2rem)); padding: 2rem; }
+#import-dialog p, #progress-dialog p, .import-welcome p { color: #a9bcd1; }
+#import-dialog ol { padding-inline-start: 1.5rem; max-height: 30vh; overflow: auto; }
+#import-dialog li { overflow-wrap: anywhere; margin-bottom: .4rem; }
+#import-dialog li button { margin-inline-start: .8rem; }
+.import-actions { display: flex; gap: .6rem; justify-content: flex-end; }
+#progress-dialog { text-align: center; }
+.import-pulse { display: flex; align-items: center; justify-content: center; height: 3rem; gap: .3rem; }
+.import-pulse i { width: .35rem; height: 1.7rem; background: #48c9b0; border-radius: 1rem; animation: import-bars 1s ease-in-out infinite alternate; }
+.import-pulse i:nth-child(2n) { animation-delay: -.35s; }
+.import-pulse i:nth-child(3n) { animation-delay: -.7s; }
+@keyframes import-bars { from { transform: scaleY(.3); opacity: .45; } to { transform: scaleY(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .import-pulse i { animation: none; } }
+@media (max-width: 680px) {
+  .topbar { flex-wrap: wrap; height: auto; min-height: 50px; gap: .35rem; padding-block: .5rem; }
+  .top-actions { flex-wrap: wrap; margin-inline-start: auto; }
+  .top-actions [data-import] { font-size: .75rem; padding: .4rem .55rem; }
+}
