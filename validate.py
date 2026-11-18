@@ -34,7 +34,7 @@ class TechnologyValidation(unittest.TestCase):
         build_reference(ROOT, cls.reference_dir)
         cls.model = load_model(ROOT, cls.reference_dir)
         cls.client = create_app(output_dir=cls.output_dir).test_client()
-        files = sorted((ROOT / 'data' / '2. Technology').glob('*.txt'))
+        files = sorted((ROOT / 'data' / 'Main' / '2. Technology').glob('*.txt'))
         response = cls.client.post('/api/import', data={
             'documents': [(io.BytesIO(file.read_bytes()), file.name) for file in files]})
         if response.status_code != 200:
@@ -49,7 +49,7 @@ class TechnologyValidation(unittest.TestCase):
 
     def test_01_original_dataset_and_spark_provenance(self):
         expected = {f'd{i}': text for i, text in enumerate(DOCUMENTS, 1)}
-        self.assertEqual(read_documents(ROOT / 'data' / '2. Technology'), expected)
+        self.assertEqual(read_documents(ROOT / 'data' / 'Main' / '2. Technology'), expected)
         self.assertEqual(self.model['documents'], expected)
         self.assertEqual(len(self.model['index']), 27)
         self.assertEqual(sum(len(text.split()) for text in expected.values()), 64)
@@ -202,7 +202,7 @@ class TechnologyValidation(unittest.TestCase):
                 load_model(root)
             shutil.copytree(ROOT / 'data', root / 'data')
             shutil.copytree(self.reference_dir, root / 'artifacts' / 'technology')
-            (root / 'data' / '2. Technology' / 'd1.txt').write_text('changed')
+            (root / 'data' / 'Main' / '2. Technology' / 'd1.txt').write_text('changed')
             with self.assertRaises(RuntimeError):
                 load_model(root)
 

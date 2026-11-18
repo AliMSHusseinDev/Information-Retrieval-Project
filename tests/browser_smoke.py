@@ -26,7 +26,7 @@ def main():
         expect(page.locator('.kpi-number')).to_have_count(0)
         with page.expect_file_chooser() as chooser:
             page.get_by_role('button', name='Import Documents', exact=True).click()
-        chooser.value.set_files(list((ROOT / 'data' / '2. Technology').glob('*.txt')))
+        chooser.value.set_files(list((ROOT / 'data' / 'Main' / '2. Technology').glob('*.txt')))
         page.get_by_role('button', name='Import selection').click()
         expect(page.locator('#progress-dialog')).to_be_visible()
         page.wait_for_url('**/c/*/', timeout=120000)
@@ -128,10 +128,10 @@ def main():
         page.set_viewport_size({'width': 1000, 'height': 800})
         with page.expect_file_chooser() as chooser:
             page.get_by_role('button', name='Import Documents', exact=True).click()
-        chooser.value.set_files(ROOT / 'data/1. Healthcare/d1.txt')
+        chooser.value.set_files(ROOT / 'data/Test/1. Healthcare/d1.txt')
         with page.expect_file_chooser() as chooser:
             page.get_by_role('button', name='Choose files…').click()
-        chooser.value.set_files(ROOT / 'data/4. Business/d1.txt')
+        chooser.value.set_files(ROOT / 'data/Test/4. Business/d1.txt')
         page.get_by_role('button', name='Import selection').click()
         page.wait_for_url(lambda url: '/c/' in url and url.endswith('/') and url.rstrip('/') != collection, timeout=120000)
         expect(page.locator('.kpi-number').first).to_have_text('2')

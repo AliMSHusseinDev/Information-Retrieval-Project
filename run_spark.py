@@ -10,12 +10,12 @@ from src.storage import SCHEMA_VERSION
 
 
 def build_reference(root, output_dir, master='local[2]'):
-    documents = read_documents(root / 'data' / '2. Technology')
-    index, spark_version = build_index(root / 'data' / '2. Technology', master)
+    documents = read_documents(root / 'data' / 'Main' / '2. Technology')
+    index, spark_version = build_index(root / 'data' / 'Main' / '2. Technology', master)
     model = dict(documents=documents, index=index, **calculate_collection(index, documents))
     model['metadata'] = dict(schema_version=SCHEMA_VERSION, engine='Apache Spark / PySpark',
                              spark_version=spark_version, master=master,
-                             fingerprint=dataset_fingerprint(root / 'data' / '2. Technology'),
+                             fingerprint=dataset_fingerprint(root / 'data' / 'Main' / '2. Technology'),
                              generated_at=datetime.now(timezone.utc).isoformat())
     export_all(model, output_dir)
     print(f'Spark {spark_version}: {len(documents)} documents, {len(index)} terms, '
