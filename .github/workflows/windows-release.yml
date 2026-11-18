@@ -1,0 +1,48 @@
+name: Package offline Windows demo
+on:
+  push:
+    tags: ['windows-*']
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bundle the project and verified Windows runtimes
+        shell: pwsh
+        run: |
+          $bundle = Join-Path $env:RUNNER_TEMP 'IR-Project'
+          git archive HEAD -o "$env:RUNNER_TEMP/project.zip"
+          Expand-Archive "$env:RUNNER_TEMP/project.zip" $bundle
+          $runtime = New-Item -ItemType Directory "$bundle/runtime"
+          function Expand-VerifiedZip($url, $sha, $name) {
+            $zip = "$env:RUNNER_TEMP/$name.zip"
+            Invoke-WebRequest $url -OutFile $zip
+            if ((Get-FileHash $zip).Hash -ne $sha) { throw "$name checksum mismatch" }
+            Expand-Archive $zip "$env:RUNNER_TEMP/$name"
+          }
+          Expand-VerifiedZip 'https://api.nuget.org/v3-flatcontainer/python/3.12.10/python.3.12.10.nupkg' '0eb85c2dfccccf1b17352de4c397f69194035b7d37149eacc16f1147d93de3b8' 'cpython'
+          Move-Item "$env:RUNNER_TEMP/cpython/tools" "$runtime/python"
+          Expand-VerifiedZip 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.9%2B10/OpenJDK21U-jre_x64_windows_hotspot_21.0.9_10.zip' '39c5e23f3ce4d420663afba8ffde28034b72e2b3e240943dc2321bc1f912eef9' 'temurin'
+          Move-Item "$env:RUNNER_TEMP/temurin/jdk-21.0.9+10-jre" "$runtime/java"
+          Set-Location $bundle
+          $env:JAVA_HOME = "$runtime/java"
+          $env:SPARK_HOME = "$runtime/python/Lib/site-packages/pyspark"
+          $env:PATH = "$runtime/python;$env:JAVA_HOME/bin;$env:PATH"
+          $env:PYSPARK_PYTHON = 'python'
+          & "$runtime/python/python.exe" -m pip install -r requirements.txt
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          & "$runtime/python/python.exe" validate.py
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Set-Location $env:RUNNER_TEMP
+          7z a -tzip IR-Project-Windows-x64.zip IR-Project
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          7z t IR-Project-Windows-x64.zip
+      - name: Publish offline ZIP
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME "$env:RUNNER_TEMP/IR-Project-Windows-x64.zip" --verify-tag --title "Offline Windows x64 demo" --notes "Extract the complete ZIP and open Launch_IR.bat."
