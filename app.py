@@ -7,10 +7,11 @@ from collections import OrderedDict
 from threading import Lock
 import zipfile
 from pathlib import Path
-from flask import Flask, jsonify, render_template, request, send_file, abort, Blueprint, g
+from flask import make_response, Flask, jsonify, render_template, request, send_file, abort, Blueprint, g
 from src.exports import prepare_downloads, save_download
+from src.calculations import query_vector
 from src.queries import search
-from src.imports import process_documents, read_uploads
+from src.imports import process_documents, read_uploads, searchable_pairs
 
 ROOT = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent))
 PAGES = {
@@ -92,9 +93,34 @@ def create_app(root=ROOT, *, output_dir=None):
     def page_view(page='dashboard'):
         if page not in PAGES:
             abort(404)
-        return render_template((page if g.collection else 'empty') + '.html', page=page, pages=PAGES,
-                               title=PAGES[page][0], description=PAGES[page][1],
-                               loaded=bool(g.collection), prefix=f'/c/{g.key}/' if g.collection else '/')
+        prefix = f'/c/{g.key}/' if g.collection else '/'
+        phrase = ''
+        cards = []
+        selected_index = None
+        if page == 'dashboard' and g.collection:
+            model = g.collection[0]
+            phrases = list(dict.fromkeys(
+                pair for text in model['documents'].values()
+                for pair in searchable_pairs(text.lower().split())
+            ))
+            if phrases:
+                previous = request.cookies.get('last_preview', type=int)
+                if len(phrases) > 1 and previous is not None and 0 <= previous < len(phrases):
+                    selected_index = (previous + 1 + secrets.randbelow(len(phrases) - 1)) % len(phrases)
+                else:
+                    selected_index = secrets.randbelow(len(phrases))
+                phrase = phrases[selected_index]
+                tokens = phrase.split()
+                weights = {row['term']: row['tfidf'] for row in query_vector(tokens, model['idf'])['rows']}
+                cards = [(term, weights[term]) for term in tokens]
+        response = make_response(render_template(
+            (page if g.collection else 'empty') + '.html', page=page, pages=PAGES,
+            title=PAGES[page][0], description=PAGES[page][1], loaded=bool(g.collection),
+            prefix=prefix, preview_phrase=phrase, preview_cards=cards,
+        ))
+        if selected_index is not None:
+            response.set_cookie('last_preview', str(selected_index), path=prefix, httponly=True, samesite='Lax')
+        return response
 
     @views.get('/api/model')
     def model_data():

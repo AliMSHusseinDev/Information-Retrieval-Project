@@ -2,6 +2,7 @@
 
 import re
 from collections import Counter
+from itertools import pairwise
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -17,10 +18,9 @@ def suggested_queries(documents):
     for text in documents.values():
         tokens = text.lower().split()
         word_counts.update(token for token in tokens if len(token) <= 300)
-        phrase_counts.update(
-            first_word + ' ' + next_word for first_word, next_word in zip(tokens, tokens[1:])
-            if len(first_word) + len(next_word) < 300
-        )
+        # Count exact two-word phrases that fit the search input limit.
+        pairs = searchable_pairs(tokens)
+        phrase_counts.update(pairs)
     if 'machine learning' in phrase_counts and 'data science' in phrase_counts:
         return PRESETS
     phrases = [term for term, _ in phrase_counts.most_common(2)]
@@ -76,3 +76,7 @@ def process_documents(documents, labels):
         export_all(model, directory, presets)
         exports = {name: (Path(directory) / name).read_bytes() for name in EXPORT_FILES}
     return model, presets, exports
+
+
+def searchable_pairs(tokens):
+    return (first + " " + second for first, second in pairwise(tokens) if len(first) + len(second) < 300)

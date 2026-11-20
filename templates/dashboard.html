@@ -11,21 +11,21 @@
       Explore how words become vectors, phrases become matches, and similarity
       becomes a ranked answer.
     </p>
-    <a class="text-link" href="mathematics"
-      >Follow a query through the engine <span>→</span></a
+    <a class="text-link" href="mathematics{% if preview_phrase %}?{{ {'phrase': preview_phrase}|urlencode }}{% endif %}"
+      >{% if preview_phrase %}Explore “{{ preview_phrase }}”{% else %}Follow a query through the engine{% endif %} <span>→</span></a
     >
   </div>
-  <div class="hero-graphic" aria-hidden="true">
+  <div class="hero-graphic" {% if preview_cards %}role="img" aria-label="Query TF-IDF: {% for term, weight in preview_cards %}{{ term }} {{ '%.4f'|format(weight) }}{% if not loop.last %}, {% endif %}{% endfor %}"{% else %}aria-hidden="true"{% endif %}>
     <div class="orbit orbit-one"></div>
     <div class="orbit orbit-two"></div>
-    <div class="vector-card vector-one">
-      <span>machine</span><b>—</b>
-      <div class="mini-track"><i></i></div>
+    {% set scale = ([1] + (preview_cards|map(attribute=1)|list))|max %}
+    {% for term, weight in preview_cards %}
+    <div class="vector-card vector-{{ loop.cycle('one', 'two') }}">
+      <span title="{{ term }}">{{ term }}</span><b>{{ '%.4f'|format(weight) }}</b>
+      <small>Query TF-IDF</small>
+      <div class="mini-track"><i style="width: {{ 100 * weight / scale }}%"></i></div>
     </div>
-    <div class="vector-card vector-two">
-      <span>learning</span><b>—</b>
-      <div class="mini-track"><i></i></div>
-    </div>
+    {% endfor %}
     <div class="similarity-node">
       <span>cosine similarity</span><strong>q · d</strong
       ><small>normalized vectors</small>

@@ -192,13 +192,6 @@ function dashboard() {
       return node;
     }),
   );
-  document.querySelectorAll(".vector-card").forEach((node, i) => {
-    const term = frequencies[i]?.[0] ?? frequencies[0][0];
-    node.querySelector("span").textContent = term;
-    const weight = model.normalized[term][docs[0]];
-    node.querySelector("b").textContent = format(weight);
-    node.querySelector(".mini-track i").style.width = `${weight * 100}%`;
-  });
 }
 
 function documentLabel(doc) {
@@ -880,11 +873,13 @@ function queryPage(isMath) {
     }
     $("phrase-input").focus();
   });
-  const param = new URLSearchParams(location.search).get("preset");
-  const initial =
-    param !== null && presets[Number(param)]
-      ? presets[Number(param)]
-      : restoredSearch();
+  const params = new URLSearchParams(location.search);
+  const phrase = params.get("phrase");
+  const param = params.get("preset");
+  let initial;
+  if (phrase) initial = { mode: "phrase", phrase };
+  else if (param !== null && presets[Number(param)]) initial = presets[Number(param)];
+  else initial = restoredSearch();
   if (initial) {
     populate(initial);
     submit();

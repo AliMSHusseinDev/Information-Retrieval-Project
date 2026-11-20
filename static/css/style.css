@@ -427,9 +427,16 @@ main {
   z-index: 2;
 }
 .vector-card span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 10px;
   color: #a5bebf;
   display: block;
+}
+.vector-card small {
+  color: #a5bebf;
+  font-size: 9px;
 }
 .vector-card b {
   font-size: 22px;
