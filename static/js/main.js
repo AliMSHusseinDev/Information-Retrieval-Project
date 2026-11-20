@@ -195,7 +195,9 @@ function dashboard() {
   document.querySelectorAll(".vector-card").forEach((node, i) => {
     const term = frequencies[i]?.[0] ?? frequencies[0][0];
     node.querySelector("span").textContent = term;
-    node.querySelector("b").textContent = format(model.normalized[term][docs[0]]);
+    const weight = model.normalized[term][docs[0]];
+    node.querySelector("b").textContent = format(weight);
+    node.querySelector(".mini-track i").style.width = `${weight * 100}%`;
   });
 }
 
