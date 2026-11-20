@@ -106,9 +106,37 @@ function collectPanels(page, root) {
   }
 }
 
+async function renderPng(root, css, width, height) {
+  // Aim for 2× text resolution. Keep large matrices inside browser canvas limits.
+  const scale = Math.min(2, 16384 / Math.max(width, height), Math.sqrt(32_000_000 / (width * height)));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.floor(width * scale));
+  canvas.height = Math.max(1, Math.floor(height * scale));
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", canvas.width);
+  svg.setAttribute("height", canvas.height);
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  const style = document.createElementNS(svg.namespaceURI, "style");
+  style.textContent = css;
+  const panel = document.createElementNS(svg.namespaceURI, "foreignObject");
+  panel.setAttribute("width", width);
+  panel.setAttribute("height", height);
+  panel.append(root);
+  svg.append(style, panel);
+  const image = new Image();
+  image.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+  await image.decode();
+  const context = canvas.getContext("2d", { alpha: false });
+  context.drawImage(image, 0, 0);
+  return new Promise((resolve, reject) => canvas.toBlob(blob => {
+    if (blob) resolve(blob);
+    else reject(new Error("Could not create the PNG image."));
+  }, "image/png"));
+}
+
 async function capture(page) {
   const root = document.createElement("div");
-  root.className = "capture-root";
+  root.className = "capture-root capture-" + page;
   const title = document.createElement("h1");
   title.textContent = document.querySelector(".page-heading h1").textContent;
   root.append(title);
@@ -124,7 +152,7 @@ async function capture(page) {
   stage.className = "capture-stage";
   stage.inert = true;
   document.body.append(stage);
-  let payload;
+  let png;
   try {
     const frame = stage.contentDocument;
     frame.open();
@@ -134,22 +162,26 @@ async function capture(page) {
     style.textContent = Array.from(document.styleSheets).filter(sheet => !sheet.href?.endsWith("/responsive.css")).map(sheet =>
       Array.from(sheet.cssRules, rule => rule.cssText).join("\n")
     ).join("\n");
-    style.textContent += "html { scrollbar-gutter: auto; overflow: hidden; }";
+    style.textContent += ":root { scrollbar-gutter: auto; overflow: hidden; }";
     frame.head.append(style);
     frame.body.append(root);
-    let width = Math.max(1440, root.scrollWidth);
-    // Include the inner table's overflow AND the panel's padding on both sides.
+    // Size to the actual panels, including the last column of a scrolling table.
+    const initialWidth = root.getBoundingClientRect().width;
+    let width = Math.max(initialWidth, root.scrollWidth);
     for (const item of root.querySelectorAll(".table-scroll, .formula")) {
-      width = Math.max(width, 1440 + item.scrollWidth - item.clientWidth);
+      width = Math.max(width, initialWidth + item.scrollWidth - item.clientWidth);
     }
-    stage.style.width = Math.ceil(width) + "px";
-    payload = { label, width: Math.ceil(width), height: Math.ceil(root.getBoundingClientRect().height),
-      content: new XMLSerializer().serializeToString(root) };
+    width = Math.ceil(width);
+    stage.style.width = width + "px";
+    root.style.width = width + "px";
+    const height = Math.ceil(root.getBoundingClientRect().height);
+    png = await renderPng(root, style.textContent, width, height);
   } finally {
     stage.remove();
   }
-  const response = await fetch("api/screenshots/" + page, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+  const query = new URLSearchParams({ label: Array.from(label).slice(0, 60).join("") });
+  const response = await fetch("api/screenshots/" + page + "?" + query, {
+    method: "POST", headers: { "Content-Type": "image/png" }, body: png,
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || "Screenshot could not be saved.");

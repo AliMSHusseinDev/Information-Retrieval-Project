@@ -3,6 +3,7 @@
 Run with python validate.py. Test downloads and reference files use temporary directories.
 The HTTP checks import the Technology collection through the live Spark pipeline.
 """
+import base64
 import csv
 import io
 import json
@@ -219,17 +220,23 @@ class TechnologyValidation(unittest.TestCase):
     def test_14_screenshots_are_unique_and_survive_restart(self):
         folder = self.output_dir.parent / 'screenshots'
         self.assertEqual(list(folder.iterdir()), [])
-        payload = dict(label='TF-IDF', width=1440, height=750,
-                       content='<div xmlns="http://www.w3.org/1999/xhtml"><p>machine</p></div>')
+        payload = base64.b64decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGPgEpEDAABoAD1UCKP3AAAAAElFTkSuQmCC')
         files = []
         for _ in range(2):
-            response = self.client.post(self.base + 'api/screenshots/analytics', json=payload)
+            response = self.client.post(self.base + 'api/screenshots/analytics?label=TF-IDF',
+                                        data=payload, content_type='image/png')
             self.assertEqual(response.status_code, 201)
             files.append(folder / response.json['name'])
+        truncated = self.client.post(self.base + 'api/screenshots/analytics',
+                                     data=payload[:-1], content_type='image/png')
+        self.assertEqual(truncated.status_code, 400)
+        self.assertEqual(set(folder.iterdir()), set(files))
         self.assertNotEqual(*files)
         create_app(output_dir=self.output_dir)
         for path in files:
-            self.assertIn(b'machine', path.read_bytes())
+            self.assertEqual(path.suffix, '.png')
+            self.assertEqual(path.read_bytes(), payload)
 
 
 if __name__ == '__main__':

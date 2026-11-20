@@ -1,7 +1,7 @@
 .capture-stage {
   position: fixed;
   inset: 0 auto auto -100000px;
-  width: 1440px;
+  width: 1200px;
   border: 0;
   height: 1px;
   pointer-events: none;
@@ -9,9 +9,10 @@
   z-index: -1;
 }
 .capture-root {
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
   display: flow-root;
-  padding: 36px;
+  padding: 16px;
   background: #0b1220;
   color: #edf2f8;
   font: 14px/1.55 "Segoe UI", Arial, sans-serif;
@@ -37,3 +38,5 @@
 .capture-root .search-layout { grid-template-columns: minmax(0,1fr) 320px; }
 .capture-root .term-button, .capture-root .posting { cursor: default; }
 .capture-root .chart-grid, .capture-root > details { margin-bottom: 20px; }
+
+.capture-dashboard { width: 100%; }

@@ -162,8 +162,10 @@ def create_app(root=ROOT, *, output_dir=None):
         if page not in PAGES or page == 'reports':
             abort(404)
         request.max_content_length = 48 * 1024 * 1024
+        if request.mimetype != 'image/png':
+            return jsonify(error='A PNG image is required.'), 415
         try:
-            name = save_screenshot(screenshot_dir, root / 'static', page, request.get_json())
+            name = save_screenshot(screenshot_dir, page, request.args.get('label', ''), request.get_data())
         except ValueError as error:
             return jsonify(error=str(error)), 400
         except OSError:
