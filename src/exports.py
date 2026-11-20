@@ -54,17 +54,22 @@ def export_all(model, output_dir, presets=PRESETS):
     output.mkdir(parents=True, exist_ok=True)
     write_json(output / 'model.json', model)
     write_json(output / 'positional_index.json', model['index'])
-    docs = list(model['documents'])
+    document_ids = list(model['documents'])
     for matrix in ('raw_tf', 'weighted_tf', 'tfidf', 'normalized'):
-        rows = [[term] + [values[doc] for doc in docs] for term, values in model[matrix].items()]
-        write_csv(output / (matrix + '.csv'), ['term'] + docs, rows)
+        rows = [[term] + [values[doc_id] for doc_id in document_ids] for term, values in model[matrix].items()]
+        write_csv(output / (matrix + '.csv'), ['term'] + document_ids, rows)
     write_csv(output / 'df_idf.csv', ['term', 'df', 'idf'],
               [[term, model['df'][term], model['idf'][term]] for term in model['index']])
     write_csv(output / 'document_lengths.csv', ['document', 'length'], model['lengths'].items())
-    queries = [dict(label=p['label'], **search(model, p['phrase'], p['mode'], p['other'])) for p in presets]
+    queries = []
+    for preset in presets:
+        query_result = search(model, preset['phrase'], preset['mode'], preset['other'])
+        queries.append(dict(label=preset['label'], **query_result))
     write_json(output / 'phrase_queries.json', queries[:2])
     write_json(output / 'boolean_queries.json', queries[2:])
-    rows = [[q['label'], r['document'], r['similarity']] for q in queries for r in q['results']]
+    rows = [[query['label'], match['document'], match['similarity']]
+            for query in queries for match in query['results']]
     write_csv(output / 'similarities.csv', ['query', 'document', 'similarity'], rows)
-    rows = [[q['label'], r['rank'], r['document'], r['similarity']] for q in queries for r in q['results']]
+    rows = [[query['label'], match['rank'], match['document'], match['similarity']]
+            for query in queries for match in query['results']]
     write_csv(output / 'rankings.csv', ['query', 'rank', 'document', 'similarity'], rows)
