@@ -482,6 +482,7 @@ main {
   position: relative;
 }
 .kpi-label {
+  padding-inline-end: 32px;
   font-size: 11px;
   color: var(--muted);
 }
@@ -502,12 +503,20 @@ main {
   top: 17px;
   background: #1d3343;
   color: var(--teal);
-  width: 29px;
-  height: 29px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   display: grid;
   place-items: center;
-  font-size: 17px;
+}
+.kpi-icon svg {
+  width: 62%;
+  height: 62%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .kpi:nth-child(2) .kpi-icon {
   color: var(--blue);

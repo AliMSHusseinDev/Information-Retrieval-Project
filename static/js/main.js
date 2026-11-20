@@ -104,6 +104,18 @@ function restoredSearch() {
   }
 }
 
+function metricIcon(pathData) {
+  const badge = element("span", "kpi-icon");
+  badge.setAttribute("aria-hidden", "true");
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  const path = document.createElementNS(svg.namespaceURI, "path");
+  path.setAttribute("d", pathData);
+  svg.append(path);
+  badge.append(svg);
+  return badge;
+}
+
 function dashboard() {
   const docs = Object.keys(model.documents);
   $("imported-names").append(table(["Document", "Original file", "Preview"], docs.map(doc => [doc, model.filenames[doc], model.documents[doc].slice(0, 80)])));
@@ -112,15 +124,15 @@ function dashboard() {
     0,
   );
   const cards = [
-    ["Total documents", docs.length, "Original TXT source files", "▤"],
+    ["Total documents", docs.length, "Original TXT source files", "M6 3h8l4 4v14H6z M14 3v5h4 M9 12h6 M9 16h6"],
     [
       "Unique terms",
       Object.keys(model.index).length,
       "Complete collection vocabulary",
-      "≡",
+      "M12 6C9 4 5 4 2.5 5v13c3-1 6.5-1 9.5 1 3-2 6.5-2 9.5-1V5C19 4 15 4 12 6z M12 6v13",
     ],
-    ["Total tokens", totalTokens, "Every occurrence, preserved", "▥"],
-    ["Suggested queries", presets.length, "From the imported text", "⌕"],
+    ["Total tokens", totalTokens, "Every occurrence, preserved", "M9 3 6 21 M18 3l-3 18 M4 9h17 M3 15h17"],
+    ["Suggested queries", presets.length, "From the imported text", "M16.5 10a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z M15 15l6 6"],
   ];
   replace(
     $("kpi-grid"),
@@ -130,7 +142,7 @@ function dashboard() {
         element("div", "kpi-label", label),
         element("div", "kpi-number", value),
         element("div", "kpi-foot", foot),
-        element("div", "kpi-icon", icon),
+        metricIcon(icon),
       );
       return card;
     }),
