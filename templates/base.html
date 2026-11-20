@@ -4,7 +4,9 @@
     <meta charset="utf-8" />
     <base href="{{ prefix }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#0b1220" />
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
     <title>{{ title }} · IR Project</title>
     <link
       rel="icon"
@@ -15,6 +17,8 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/capture.css') }}" />
     <script
       defer
       src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"
@@ -68,36 +72,22 @@
           Workspace <span>/</span> <strong>{{ title }}</strong>
         </div>
         <div class="top-actions">
-          <span class="status"
-            ><i></i> <span id="header-status">{{ "Collection ready" if loaded else "No documents" }}</span></span
-          ><span class="header-divider"></span
-          ><button
-            id="help-button"
-            class="icon-button"
-            aria-label="About this project"
-          >
-            ?</button
-          >{% if loaded %}<button class="button primary" data-import>Import Documents</button>{% endif %}
+          {% if loaded %}<button class="button primary" data-import>Import Documents</button>{% endif %}
         </div>
       </header>
       <main id="main">
         <div class="page-heading">
           <div>
-            <p class="eyebrow">
-              DOCUMENT COLLECTION <span>/</span> INFORMATION STORAGE &
-              RETRIEVAL
-            </p>
             <h1>{{ title if loaded else "Document workspace" }}</h1>
             {% if loaded %}<p class="page-description">{{ description }}</p>{% endif %}
           </div>
-          {% block heading_action %}{% endblock %}
+          <div class="heading-actions">
+            {% if loaded and page != 'reports' %}<button class="button" id="screenshot" disabled>Screenshot</button>{% endif %}
+            {% block heading_action %}{% endblock %}
+          </div>
         </div>
         <div id="app-error" class="notice error" role="alert" hidden></div>
         {% block content %}{% endblock %}
-        <footer>
-          <span>IR Project</span
-          ><span>Built on Apache Spark · Calculated with precision</span>
-        </footer>
       </main>
     </div>
     <dialog id="import-dialog" aria-labelledby="import-title">
@@ -114,30 +104,6 @@
       <div class="import-pulse" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
       <h2 id="progress-title" role="status">Indexing your documents…</h2>
       <p id="progress-detail">Spark is building the positional index and calculating document weights.</p>
-    </dialog>
-    <dialog id="help-dialog">
-      <div class="dialog-heading">
-        <h2>From words to relevance</h2>
-        <button id="close-help" class="icon-button" aria-label="Close help">
-          ×
-        </button>
-      </div>
-      <p>
-        The imported collection uses real PySpark positional indexing,
-        base-10 TF-IDF, and normalized cosine similarity.
-      </p>
-      <p>
-        Phrase search requires consecutive positions. AND intersects phrase
-        sets; AND NOT excludes the complete second phrase. Positions start at 1.
-        Values are rounded only for display.
-      </p>
-      <p>
-        Read the English PDF discussion guides in the
-        repository’s <code>docs/</code> folder.
-      </p>
-      <a class="button primary" href="mathematics"
-        >Explore the mathematics →</a
-      >
     </dialog>
     <div id="toast" role="status" class="toast" hidden></div>
   </body>

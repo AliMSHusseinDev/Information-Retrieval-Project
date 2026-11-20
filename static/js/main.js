@@ -1,4 +1,6 @@
 import "./import.js";
+import { enableScreenshots } from "./screenshots.js";
+import { revealSections } from "./motion.js";
 import { barChart } from "./charts.js";
 
 const $ = (id) => document.getElementById(id);
@@ -808,6 +810,7 @@ function queryPage(isMath) {
         body: JSON.stringify(payload),
       });
       saveSearch(payload);
+      $("main").dataset.resultQuery = data.phrase + (data.mode === "phrase" ? "" : (data.mode === "and" ? " AND " : " AND NOT ") + data.other);
       $("query-message").textContent = data.unknown_terms.length
         ? `Not in the collection: ${data.unknown_terms.join(", ")}.`
         : `${data.count} matching document${data.count === 1 ? "" : "s"} · Query length ${format(data.query.length, 6)} · Full precision retained`;
@@ -843,6 +846,7 @@ function queryPage(isMath) {
     $("query-form").reset();
     setMode("phrase");
     saveSearch(null);
+    delete $("main").dataset.resultQuery;
     $("query-message").textContent =
       "Enter a phrase or choose one of the suggested queries.";
     $("query-message").classList.remove("invalid");
@@ -970,21 +974,22 @@ async function reports() {
   );
 }
 
-$("collapse-sidebar").addEventListener("click", () => {
-  const collapsed = document.body.classList.toggle("sidebar-collapsed");
+function updateSidebarButton() {
+  const collapsed = document.documentElement.classList.contains("sidebar-collapsed");
   $("collapse-sidebar").setAttribute("aria-expanded", String(!collapsed));
-  $("collapse-sidebar").setAttribute(
-    "aria-label",
-    collapsed ? "Expand sidebar" : "Collapse sidebar",
-  );
+  $("collapse-sidebar").setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+}
+updateSidebarButton();
+$("collapse-sidebar").addEventListener("click", () => {
+  const collapsed = document.documentElement.classList.toggle("sidebar-collapsed");
+  try { sessionStorage.setItem("sidebar-collapsed", String(collapsed)); } catch { /* optional storage */ }
+  updateSidebarButton();
 });
-$("help-button").addEventListener("click", () => $("help-dialog").showModal());
-$("close-help").addEventListener("click", () => $("help-dialog").close());
+revealSections();
 if (document.body.dataset.loaded === "1") try {
   const data = await request("api/model");
   model = data.model;
   presets = data.presets;
-  $("header-status").textContent = "Collection ready";
   const page = document.body.dataset.page;
   if (page === "dashboard") dashboard();
   if (page === "index") indexExplorer();
@@ -992,8 +997,8 @@ if (document.body.dataset.loaded === "1") try {
   if (page === "search" || page === "mathematics")
     queryPage(page === "mathematics");
   if (page === "reports") await reports();
+  enableScreenshots(page, toast);
 } catch (error) {
   $("app-error").hidden = false;
   $("app-error").textContent = error.message;
-  $("header-status").textContent = "Needs attention";
 }

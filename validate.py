@@ -216,6 +216,21 @@ class TechnologyValidation(unittest.TestCase):
             archived, = (Path(tmp) / 'previous_exports').glob('*/raw_tf.csv')
             self.assertEqual(archived.read_bytes(), b'previous export')
 
+    def test_14_screenshots_are_unique_and_survive_restart(self):
+        folder = self.output_dir.parent / 'screenshots'
+        self.assertEqual(list(folder.iterdir()), [])
+        payload = dict(label='TF-IDF', width=1440, height=750,
+                       content='<div xmlns="http://www.w3.org/1999/xhtml"><p>machine</p></div>')
+        files = []
+        for _ in range(2):
+            response = self.client.post(self.base + 'api/screenshots/analytics', json=payload)
+            self.assertEqual(response.status_code, 201)
+            files.append(folder / response.json['name'])
+        self.assertNotEqual(*files)
+        create_app(output_dir=self.output_dir)
+        for path in files:
+            self.assertIn(b'machine', path.read_bytes())
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

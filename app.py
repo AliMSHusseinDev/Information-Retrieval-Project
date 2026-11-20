@@ -10,6 +10,7 @@ from pathlib import Path
 from flask import make_response, Flask, jsonify, render_template, request, send_file, abort, Blueprint, g
 from src.exports import prepare_downloads, save_download
 from src.calculations import query_vector
+from src.screenshots import save_screenshot
 from src.queries import search
 from src.imports import process_documents, read_uploads, searchable_pairs
 
@@ -28,6 +29,8 @@ def create_app(root=ROOT, *, output_dir=None):
     if output_dir is None:
         project = Path(sys.executable).parent if getattr(sys, 'frozen', False) else root
         output_dir = project / 'outputs'
+    screenshot_dir = Path(output_dir).parent / 'screenshots'
+    screenshot_dir.mkdir(exist_ok=True, parents=True)
     prepare_downloads(output_dir)
     app = Flask(__name__, template_folder=str(root / 'templates'), static_folder=str(root / 'static'))
     app.json.sort_keys = False
@@ -76,11 +79,16 @@ def create_app(root=ROOT, *, output_dir=None):
 
     @app.errorhandler(413)
     def too_large(error):
+        if request.endpoint and request.endpoint.endswith('.capture'):
+            return jsonify(error='The screenshot is too large to save (48 MB limit).'), 413
         return jsonify(error='Choose a smaller batch (under 2 MB per import).'), 413
 
     @app.after_request
     def response_headers(response):
-        if request.endpoint != 'static':
+        if request.endpoint == 'active.model_data' and response.status_code == 200:
+            response.cache_control.private = True
+            response.cache_control.max_age = 600
+        elif request.endpoint != 'static':
             response.cache_control.no_store = True
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Content-Security-Policy'] = (
@@ -148,6 +156,20 @@ def create_app(root=ROOT, *, output_dir=None):
         except (ValueError, TypeError):
             # Validation errors are expected user input, not server tracebacks.
             return jsonify(error='Enter a phrase (up to 300 characters / 40 tokens) and a valid search mode. Boolean modes require two phrases.'), 400
+
+    @views.post('/api/screenshots/<page>')
+    def capture(page):
+        if page not in PAGES or page == 'reports':
+            abort(404)
+        request.max_content_length = 48 * 1024 * 1024
+        try:
+            name = save_screenshot(screenshot_dir, root / 'static', page, request.get_json())
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
+        except OSError:
+            app.logger.exception('Could not save screenshot')
+            return jsonify(error='Could not write to the screenshots folder.'), 500
+        return jsonify(name=name), 201
 
     @views.get('/api/exports')
     def export_status():

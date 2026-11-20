@@ -1,0 +1,39 @@
+.capture-stage {
+  position: fixed;
+  inset: 0 auto auto -100000px;
+  width: 1440px;
+  border: 0;
+  height: 1px;
+  pointer-events: none;
+  visibility: hidden;
+  z-index: -1;
+}
+.capture-root {
+  width: 100%;
+  display: flow-root;
+  padding: 36px;
+  background: #0b1220;
+  color: #edf2f8;
+  font: 14px/1.55 "Segoe UI", Arial, sans-serif;
+  overflow-wrap: anywhere;
+}
+.capture-root h1 { font-size: 32px; margin: 0 0 18px; }
+.capture-root .capture-caption { color: #a7c9db; margin: 0 0 20px; }
+.capture-root .table-scroll, .capture-root .formula, .capture-root .token-strip {
+  overflow: visible;
+  max-width: none;
+  max-height: none;
+}
+.capture-root .formula { white-space: pre-wrap; }
+.capture-root th, .capture-root td, .capture-root .ranking-panel { position: static; }
+.capture-root .hero { display: grid; grid-template-columns: 1fr 1fr; }
+.capture-root .hero-graphic { display: block; min-height: 260px; }
+.capture-root .hero-graphic .vector-card, .capture-root .hero-graphic .similarity-node { display: block; }
+.capture-root .hero-graphic .similarity-node { display: flex; }
+.capture-root .chart-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.capture-root .chart-wrap svg { display: block; width: 100%; height: 100%; }
+.capture-root .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+.capture-root .pipeline { grid-template-columns: repeat(6, 1fr); }
+.capture-root .search-layout { grid-template-columns: minmax(0,1fr) 320px; }
+.capture-root .term-button, .capture-root .posting { cursor: default; }
+.capture-root .chart-grid, .capture-root > details { margin-bottom: 20px; }
