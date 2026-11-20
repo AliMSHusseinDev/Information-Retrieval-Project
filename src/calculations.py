@@ -4,11 +4,13 @@ import math
 from collections import Counter
 
 
+# Member 2: Weight a term count.
 def weighted_tf(frequency):
     """Turn an occurrence count into 1 + log10(TF); absent terms have weight zero."""
     return 1 + math.log10(frequency) if frequency > 0 else 0.0
 
 
+# Members 2 and 3: Calculate term counts and document weights.
 def calculate_collection(index, documents):
     """Derive every matrix from Spark positions, using terms as rows and docs as columns.
 
@@ -16,13 +18,16 @@ def calculate_collection(index, documents):
     Keep floats unrounded: four-decimal formatting belongs only in the interface.
     """
     raw_tf, weighted, df, idf, tfidf = {}, {}, {}, {}, {}
+    # Member 2: Count terms and documents, then calculate IDF.
     for term, postings in index.items():
         raw_tf[term] = {doc: len(postings.get(doc, [])) for doc in documents}
         weighted[term] = {doc: weighted_tf(raw_tf[term][doc]) for doc in documents}
         df[term] = len(postings)
         idf[term] = math.log10(len(documents) / df[term])
+        # Member 3: Calculate the TF-IDF row for this term.
         tfidf[term] = {doc: weighted[term][doc] * idf[term] for doc in documents}
 
+    # Member 3: Find document lengths and normalize the vectors.
     lengths = {}
     for doc in documents:
         lengths[doc] = math.sqrt(sum(tfidf[term][doc] ** 2 for term in index))
@@ -35,6 +40,7 @@ def calculate_collection(index, documents):
                 tfidf=tfidf, lengths=lengths, normalized=normalized)
 
 
+# Member 5: Build the query vector for scoring.
 def query_vector(tokens, collection_idf):
     """Weight query counts with existing collection IDF, then L2-normalize.
 

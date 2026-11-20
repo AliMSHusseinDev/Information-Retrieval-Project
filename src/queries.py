@@ -11,6 +11,7 @@ PRESETS = [
 ]
 
 
+# Member 4: Match phrases using word positions.
 def phrase_matches(index, tokens):
     """Find start positions where every token occurs at start + its token offset.
 
@@ -33,6 +34,7 @@ def phrase_matches(index, tokens):
     return matches
 
 
+# Member 4: Check and split a search phrase.
 def clean_phrase(value, label):
     """Validate a short whitespace-tokenized phrase supplied through the API."""
     if not isinstance(value, str) or not value.strip():
@@ -42,6 +44,7 @@ def clean_phrase(value, label):
     return value.lower().split()
 
 
+# Members 5 and 6: Filter matches, calculate scores and rank documents.
 def search(model, phrase, mode='phrase', other=''):
     """Filter exact phrase matches, construct a positive query vector, and rank.
 
@@ -49,6 +52,7 @@ def search(model, phrase, mode='phrase', other=''):
     only as a filter and never changes original normalized document vectors.
     Return matches, query mathematics, and per-term dot-product contributions.
     """
+    # Member 6: Apply the selected filter and choose the scoring terms.
     if mode not in ('phrase', 'and', 'and_not'):
         raise ValueError('Choose phrase, and, or and_not mode.')
     tokens = clean_phrase(phrase, 'First phrase')
@@ -61,6 +65,7 @@ def search(model, phrase, mode='phrase', other=''):
     elif mode == 'and_not':
         candidates.difference_update(second)
     positive_tokens = tokens + other_tokens if mode == 'and' else tokens
+    # Member 5: Score each match and rank the results.
     vector = query_vector(positive_tokens, model['idf'])
     results = []
     for doc in candidates:

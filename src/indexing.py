@@ -35,6 +35,7 @@ def build_index(data_dir, master='local[2]'):
     return index_documents(read_documents(data_dir), master)
 
 
+# Member 1: Build the positional index with Spark.
 def index_documents(documents, master='local[2]'):
     """Group positions in Spark SQL directly from the selected text, including on Windows."""
     import json
